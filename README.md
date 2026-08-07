@@ -15,12 +15,17 @@ carrousels publicitaires intégré.
 
 ```bash
 npm install
-cp .env.example .env          # puis remplir AUTH_SECRET (voir ci-dessous)
-npx prisma migrate dev        # crée la base SQLite
+cp .env.example .env          # puis remplir DATABASE_URL et AUTH_SECRET
+npx prisma migrate deploy     # crée les tables
 npm run dev                   # http://localhost:3000
 ```
 
-La seule variable **obligatoire** est `AUTH_SECRET` :
+Deux variables sont **obligatoires** :
+
+- `DATABASE_URL` — une base PostgreSQL. En local, la plus simple est une base
+  gratuite chez Neon ou Supabase : vous pouvez utiliser la même qu'en
+  production le temps du développement.
+- `AUTH_SECRET` — la clé qui signe les sessions de connexion :
 
 ```bash
 openssl rand -base64 32
@@ -108,14 +113,15 @@ même activé correctement.
 
 ## Mise en production
 
-1. **Base de données.** SQLite convient pour développer, pas pour la
-   production. Prenez une base PostgreSQL (Neon, Supabase, Prisma Postgres),
-   puis :
-   ```bash
-   npm i @prisma/adapter-pg pg
-   ```
-   passez `provider = "postgresql"` dans `prisma/schema.prisma`, remplacez
-   l'adaptateur dans `src/lib/db.ts`, et lancez `npx prisma migrate deploy`.
+1. **Base de données.** Le projet tourne sur PostgreSQL. Dans Vercel, onglet
+   **Storage → Create Database → Postgres** : `DATABASE_URL` est renseignée
+   automatiquement. Les migrations sont appliquées à chaque déploiement — le
+   script `build` lance `prisma migrate deploy` avant de construire le site,
+   il n'y a donc aucune commande à passer à la main.
+
+   Si votre hébergeur propose une URL de connexion « pooled » (contenant
+   `-pooler`), préférez-la : sur un hébergement sans serveur, chaque requête
+   ouvre sa propre connexion et une URL directe épuise vite le quota.
 2. **Hébergement.** Vercel convient bien à Next.js. Renseignez-y les mêmes
    variables d'environnement, avec `NEXT_PUBLIC_SITE_URL` sur votre vrai
    domaine.
@@ -155,7 +161,7 @@ Deux points qui changent tout sur le rendement des pubs :
 ## Pile technique
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 ·
-Prisma 7 · Stripe · SQLite en local, PostgreSQL en production.
+Prisma 7 · Stripe · PostgreSQL.
 
 Aucune librairie de graphiques, de carrousel ou d'animation : tout est en SVG
 et CSS natifs, ce qui garde le site léger et sans dépendance à maintenir.
@@ -167,5 +173,6 @@ npm run dev     # développement
 npm run build   # build de production
 npm run start   # serveur de production
 npm run lint    # ESLint
-npx prisma studio   # explorer la base de données
+npx prisma migrate deploy   # appliquer les migrations
+npx prisma studio           # explorer la base de données
 ```

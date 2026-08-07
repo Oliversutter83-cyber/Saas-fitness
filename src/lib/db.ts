@@ -1,21 +1,26 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
 /**
- * Prisma 7 passe par un adaptateur de driver. Ici SQLite, qui suffit largement
- * pour démarrer et pour le développement local.
+ * Connexion à la base PostgreSQL.
  *
- * Pour passer en production sur PostgreSQL (recommandé dès les premiers
- * abonnés payants) :
- *   1. npm i @prisma/adapter-pg pg
- *   2. provider = "postgresql" dans prisma/schema.prisma
- *   3. remplacer l'adaptateur ci-dessous par PrismaPg
- *   4. npx prisma migrate deploy
+ * Le projet a démarré sur SQLite, pratique en développement mais inutilisable
+ * en production : SQLite écrit dans un fichier, or l'hébergeur monte le disque
+ * en lecture seule. Toute écriture — ne serait-ce que créer un compte —
+ * échouait donc en ligne. PostgreSQL est un serveur distinct, ce problème
+ * disparaît.
  */
 function createClient() {
-  const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL manquant. Créez une base PostgreSQL (Vercel → Storage, Neon, Supabase…) " +
+        "et renseignez son URL de connexion dans les variables d'environnement.",
+    );
+  }
+
   return new PrismaClient({
-    adapter: new PrismaBetterSqlite3({ url }),
+    adapter: new PrismaPg({ connectionString: url }),
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 }
