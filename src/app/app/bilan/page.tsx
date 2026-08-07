@@ -4,7 +4,7 @@ import { BilanForm } from "./BilanForm";
 import { supprimerBilan } from "./actions";
 import { Badge, Button } from "@/components/ui";
 import { aiEnabled } from "@/lib/ai";
-import { requireUser } from "@/lib/auth";
+import { isOwner, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { Plan } from "@/lib/coach";
 
@@ -31,7 +31,7 @@ export default async function BilanPage() {
         <div className="mt-8">
           <BilanForm />
         </div>
-        {!aiEnabled && <AiNotice />}
+        {!aiEnabled && isOwner(user.email) && <AiNotice />}
       </div>
     );
   }

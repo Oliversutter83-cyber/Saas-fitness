@@ -29,6 +29,20 @@ export async function requireUser(): Promise<User> {
   return user;
 }
 
+/**
+ * Est-ce VOTRE compte ? Sert à réserver les outils et les messages internes
+ * (kit publicité, avertissements de configuration) à l'exploitant du site.
+ *
+ * En production, la réponse est non tant qu'OWNER_EMAIL n'est pas renseigné :
+ * mieux vaut un outil interne inaccessible qu'un outil interne ouvert à tous
+ * les abonnés. En développement, tout est ouvert pour pouvoir travailler.
+ */
+export function isOwner(email: string): boolean {
+  if (process.env.NODE_ENV === "development") return true;
+  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  return Boolean(owner) && email.trim().toLowerCase() === owner;
+}
+
 export const ACTIVE_STATUSES = ["active", "trialing"] as const;
 
 /** L'utilisateur a-t-il un accès payant valide ? */

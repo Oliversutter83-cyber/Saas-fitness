@@ -3,20 +3,18 @@ import type { Metadata } from "next";
 import { CarouselStudio } from "@/components/CarouselStudio";
 import { SITE } from "@/config";
 import { EXERCISES } from "@/content/exercises";
-import { requireUser } from "@/lib/auth";
+import { isOwner, requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Kit publicité" };
 
 /**
- * Outil interne : il sert à VOUS, pas aux abonnés. L'accès est réservé à
- * l'adresse déclarée dans OWNER_EMAIL. Tant que cette variable n'est pas
- * renseignée (développement local), la page reste ouverte aux comptes connectés.
+ * Outil interne : il sert à VOUS, pas aux abonnés. L'accès passe par isOwner,
+ * qui refuse en production tant qu'OWNER_EMAIL n'est pas renseigné — un outil
+ * interne inaccessible vaut mieux qu'un outil interne ouvert aux abonnés.
  */
 export default async function KitPubPage() {
   const user = await requireUser();
-  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
-  if (owner && user.email !== owner) notFound();
-
+  if (!isOwner(user.email)) notFound();
 
   return (
     <div className="space-y-6">
@@ -30,14 +28,6 @@ export default async function KitPubPage() {
           PNG. Rien à filmer, rien à monter.
         </p>
       </header>
-
-      {!process.env.OWNER_EMAIL && (
-        <p className="rounded-2xl bg-amber-400/10 px-5 py-4 text-sm leading-relaxed text-amber-200">
-          <strong>À faire avant la mise en ligne :</strong> renseignez{" "}
-          <code>OWNER_EMAIL</code> dans le fichier <code>.env</code> avec votre adresse, sinon cette
-          page reste visible par tous vos abonnés.
-        </p>
-      )}
 
       <CarouselStudio exercises={EXERCISES} siteName={SITE.name} handle={SITE.handle} />
 
