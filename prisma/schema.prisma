@@ -34,6 +34,7 @@ model User {
 
   completions Completion[]
   metrics     BodyMetric[]
+  assessments Assessment[]
 
   @@index([stripeCustomerId])
 }
@@ -65,6 +66,36 @@ model BodyMetric {
   note     String?
 
   @@index([userId, date])
+}
+
+// Bilan de départ : le plan personnalisé et ses objectifs.
+// La photo n'est PAS conservée par défaut — voir src/app/app/bilan/actions.ts.
+// L'abonné peut demander à garder une photo de départ pour comparer plus tard ;
+// elle est alors réduite côté navigateur et stockée ici en data URL.
+model Assessment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  // Données déclarées
+  age            Int
+  heightCm       Int
+  weightKg       Float
+  goal           String
+  level          String
+  daysPerWeek    Int
+  constraints    String?
+
+  // Plan produit : programme conseillé, planning et jalons (JSON)
+  programSlug String
+  planJson    String
+  /** "regles" quand le plan vient du moteur seul, "ia" quand l'analyse IA a abouti */
+  source      String @default("regles")
+
+  photoDataUrl String?
+
+  @@index([userId, createdAt])
 }
 
 // Emails captés depuis la landing page (aimant à prospects pour les pubs)

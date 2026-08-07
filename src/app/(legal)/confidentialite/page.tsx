@@ -32,6 +32,11 @@ export default function ConfidentialitePage() {
           conservée par l&apos;éditeur.
         </li>
         <li>
+          <strong>Bilan de départ :</strong> âge, taille, poids, objectif, niveau, disponibilité et
+          contraintes que vous déclarez, ainsi que le plan qui en résulte. La photo est facultative
+          (voir ci-dessous).
+        </li>
+        <li>
           <strong>Prospection :</strong> adresse email, si vous la communiquez volontairement depuis
           la page d&apos;accueil.
         </li>
@@ -50,6 +55,22 @@ export default function ConfidentialitePage() {
         <li>Assurer la sécurité du service et prévenir les abus — intérêt légitime.</li>
       </ul>
 
+      <h2>Photo du bilan</h2>
+      <p>
+        La photo du bilan est facultative : le bilan se génère sans elle. Lorsque vous en envoyez
+        une, elle est réduite dans votre navigateur avant tout envoi, puis transmise à notre
+        sous-traitant Anthropic (modèle Claude) à seule fin de rédiger les conseils
+        d&apos;accompagnement. Aucune mesure corporelle, aucun taux de masse grasse et aucune
+        estimation de poids n&apos;en est déduit : le modèle a l&apos;interdiction explicite de
+        produire ce type d&apos;analyse, et le programme lui-même est déterminé par nos propres
+        règles, à partir de ce que vous déclarez.
+      </p>
+      <p>
+        <strong>La photo n&apos;est pas conservée</strong>, sauf si vous cochez expressément la case
+        « garder cette photo » pour pouvoir comparer plus tard. Dans ce cas elle reste dans votre
+        espace personnel et vous pouvez la supprimer à tout moment en refaisant votre bilan.
+      </p>
+
       <h2>Données de santé</h2>
       <p>
         Le poids et le tour de taille que vous saisissez sont facultatifs. Ils ne servent qu&apos;à
@@ -65,6 +86,10 @@ export default function ConfidentialitePage() {
       </p>
       <ul>
         <li>Stripe Payments Europe Ltd — traitement des paiements et gestion des abonnements</li>
+        <li>
+          Anthropic PBC — rédaction des conseils du bilan, uniquement lorsque vous en générez un.
+          Les données transmises ne servent pas à entraîner de modèle.
+        </li>
         <li>{LEGAL.host} — hébergement du site et de la base de données</li>
       </ul>
 

@@ -160,12 +160,40 @@ export function ExerciseCarousel({
         )}
       </div>
 
-      <div className="mt-3 min-h-[5.5rem]">
-        <p className="text-sm font-bold text-white">
-          {index + 1}. {step.title}
-        </p>
-        <p className="mt-1 text-sm leading-relaxed text-white/60">{step.detail}</p>
-      </div>
+      {/*
+        En mode animation, toutes les étapes restent affichées en même temps :
+        une légende qui changerait au rythme du geste défilerait trop vite pour
+        être lue. L'étape en cours est seulement mise en évidence, et le texte
+        se lit à son propre rythme pendant que le mouvement tourne en boucle.
+      */}
+      {mode === "anim" ? (
+        <ol className="mt-3 space-y-2">
+          {steps.map((s, i) => (
+            <li
+              key={i}
+              className={`rounded-xl px-3 py-2 transition-colors duration-500 ${
+                i === index ? "bg-brand-400/10 ring-1 ring-brand-400/25" : ""
+              }`}
+            >
+              <p
+                className={`text-sm font-bold transition-colors duration-500 ${
+                  i === index ? "text-brand-200" : "text-white/80"
+                }`}
+              >
+                {i + 1}. {s.title}
+              </p>
+              <p className="mt-0.5 text-sm leading-relaxed text-white/55">{s.detail}</p>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="mt-3 min-h-[5.5rem]">
+          <p className="text-sm font-bold text-white">
+            {index + 1}. {step.title}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-white/60">{step.detail}</p>
+        </div>
+      )}
     </div>
   );
 }

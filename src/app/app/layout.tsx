@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 const NAV = [
   { href: "/app", label: "Accueil", icon: "🏠" },
+  { href: "/app/bilan", label: "Mon bilan", icon: "🎯" },
   { href: "/app/programmes", label: "Programmes", icon: "📋" },
-  { href: "/exercices", label: "Exercices", icon: "💪" },
   { href: "/app/progression", label: "Progression", icon: "📈" },
 ];
 

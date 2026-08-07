@@ -14,8 +14,13 @@ import { getPose, type P, type Pose, type PoseName } from "@/content/poses";
  * positions clés.
  */
 
-const SEGMENT_MS = 850;
-const HOLD_MS = 260;
+/**
+ * Rythme du geste. La pause aux extrémités est volontairement longue : c'est
+ * elle qui laisse voir la position basse et la position haute, les deux
+ * moments où l'on comprend le mouvement.
+ */
+const SEGMENT_MS = 900;
+const HOLD_MS = 600;
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
