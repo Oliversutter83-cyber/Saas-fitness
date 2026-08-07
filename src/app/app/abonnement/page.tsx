@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui";
 import { PLANS, TRIAL_DAYS } from "@/config";
 import { EXERCISES } from "@/content/exercises";
 import { PROGRAMS } from "@/content/programs";
-import { hasAccess, requireUser } from "@/lib/auth";
+import { hasAccess, isOwnerAccount, requireUser } from "@/lib/auth";
 import { stripeEnabled } from "@/lib/stripe";
 
 export const metadata: Metadata = { title: "Abonnement" };
@@ -24,6 +24,7 @@ export default async function AbonnementPage({
 }) {
   const [user, params] = await Promise.all([requireUser(), searchParams]);
   const active = hasAccess(user);
+  const owner = isOwnerAccount(user.email);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -52,13 +53,24 @@ export default async function AbonnementPage({
 
       <h1 className="text-3xl font-extrabold tracking-tight text-white">Abonnement</h1>
 
+      {owner && (
+        <p className="mt-6 rounded-2xl border border-brand-400/30 bg-brand-400/[0.07] px-5 py-4 text-sm leading-relaxed text-brand-100">
+          <strong>Compte d&apos;exploitant.</strong> Vous avez accès à tous les programmes en
+          permanence, sans abonnement : vous n&apos;avez pas à vous payer vous-même pour vérifier ce
+          que vous vendez. Cet accès vient de la variable <code>OWNER_EMAIL</code> et ne concerne
+          que votre compte.
+        </p>
+      )}
+
       {/* État courant */}
       <div className="mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm text-white/55">Statut</p>
             <p className="mt-1 flex items-center gap-2 text-xl font-extrabold text-white">
-              {STATUS_LABELS[user.subscriptionStatus] ?? user.subscriptionStatus}
+              {owner
+                ? "Accès permanent"
+                : (STATUS_LABELS[user.subscriptionStatus] ?? user.subscriptionStatus)}
               {active && <Badge>Accès ouvert</Badge>}
             </p>
           </div>

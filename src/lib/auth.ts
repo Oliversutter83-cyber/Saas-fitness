@@ -30,8 +30,18 @@ export async function requireUser(): Promise<User> {
 }
 
 /**
+ * Correspondance stricte avec OWNER_EMAIL, sans passe-droit de développement.
+ * C'est cette version qui décide de l'accès au produit : sinon, en local,
+ * chaque compte deviendrait abonné et le mur de paiement serait intestable.
+ */
+export function isOwnerAccount(email: string): boolean {
+  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
+  return Boolean(owner) && email.trim().toLowerCase() === owner;
+}
+
+/**
  * Est-ce VOTRE compte ? Sert à réserver les outils et les messages internes
- * (kit publicité, avertissements de configuration) à l'exploitant du site.
+ * (pilotage, kit publicité) à l'exploitant du site.
  *
  * En production, la réponse est non tant qu'OWNER_EMAIL n'est pas renseigné :
  * mieux vaut un outil interne inaccessible qu'un outil interne ouvert à tous
@@ -39,14 +49,20 @@ export async function requireUser(): Promise<User> {
  */
 export function isOwner(email: string): boolean {
   if (process.env.NODE_ENV === "development") return true;
-  const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
-  return Boolean(owner) && email.trim().toLowerCase() === owner;
+  return isOwnerAccount(email);
 }
 
 export const ACTIVE_STATUSES = ["active", "trialing"] as const;
 
-/** L'utilisateur a-t-il un accès payant valide ? */
-export function hasAccess(user: Pick<User, "subscriptionStatus" | "currentPeriodEnd">) {
+/** L'utilisateur a-t-il un accès valide au produit ? */
+export function hasAccess(
+  user: Pick<User, "email" | "subscriptionStatus" | "currentPeriodEnd">,
+) {
+  // Le compte de l'exploitant accède toujours au produit. Sans cela, il devrait
+  // s'abonner et se payer lui-même — frais Stripe compris — pour vérifier les
+  // séances qu'il vend.
+  if (isOwnerAccount(user.email)) return true;
+
   if (!ACTIVE_STATUSES.includes(user.subscriptionStatus as "active" | "trialing")) {
     return false;
   }
