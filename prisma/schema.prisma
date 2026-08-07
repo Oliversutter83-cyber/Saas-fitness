@@ -1,0 +1,76 @@
+// Schéma de la base de données.
+// Le CONTENU (exercices, programmes) vit dans src/content — pas en base :
+// c'est du contenu éditorial, plus simple à versionner et à modifier dans le code.
+// La base ne stocke que ce qui est propre à chaque utilisateur.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  createdAt    DateTime @default(now())
+
+  // Objectif choisi à l'inscription, sert à recommander un programme
+  goal  String @default("forme")
+  level String @default("debutant")
+
+  // Abonnement Stripe
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  // "none" | "trialing" | "active" | "past_due" | "canceled"
+  subscriptionStatus   String    @default("none")
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+
+  completions Completion[]
+  metrics     BodyMetric[]
+
+  @@index([stripeCustomerId])
+}
+
+// Une séance terminée. (programSlug, week, day) identifie la séance dans le programme.
+model Completion {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  programSlug String
+  week        Int
+  day         Int
+  durationSec Int      @default(0)
+  feeling     Int? // 1 à 5, ressenti après la séance
+  completedAt DateTime @default(now())
+
+  @@index([userId, completedAt])
+  @@unique([userId, programSlug, week, day])
+}
+
+// Suivi de poids / mensurations
+model BodyMetric {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date     DateTime @default(now())
+  weightKg Float?
+  waistCm  Float?
+  note     String?
+
+  @@index([userId, date])
+}
+
+// Emails captés depuis la landing page (aimant à prospects pour les pubs)
+model Lead {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("landing")
+  createdAt DateTime @default(now())
+}

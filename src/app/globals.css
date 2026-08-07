@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/*
+  Thème de la marque : sombre, or et rouge.
+
+  Deux accents, deux rôles stricts — c'est ce qui fait tenir l'ensemble :
+    · l'OR met en valeur (chiffres, badges, progression, silhouettes) ;
+    · le ROUGE signale l'action (tout ce sur quoi on clique).
+  Les surfaces sont du blanc translucide plutôt que du gris opaque : la
+  profondeur vient de la transparence, pas d'une nuance de gris de plus.
+*/
+
+@theme {
+  --color-ink-950: #0a0908;
+  --color-ink-900: #131110;
+  --color-ink-800: #1e1b19;
+  --color-ink-700: #2c2825;
+  --color-ink-600: #4a443e;
+
+  /* Accent principal : or. C'est lui qui met en valeur les chiffres, les
+     badges, la progression et les bonshommes sur le fond sombre. */
+  --color-brand-50: #fdf9ef;
+  --color-brand-100: #faf1d6;
+  --color-brand-200: #f3e1a8;
+  --color-brand-300: #eacb71;
+  --color-brand-400: #ddb13c;
+  --color-brand-500: #c69622;
+  --color-brand-600: #a37718;
+  --color-brand-700: #7d5b16;
+  --color-brand-800: #5d4415;
+  --color-brand-900: #473411;
+
+  /* Couleur d'action : rouge profond. Réservée à ce sur quoi on clique. */
+  --color-ember-100: #fde0e0;
+  --color-ember-200: #f9bcbc;
+  --color-ember-300: #f08d8d;
+  --color-ember-400: #e25a5a;
+  --color-ember-500: #cf2f2f;
+  --color-ember-600: #b02121;
+  --color-ember-700: #8d1b1b;
+  --color-ember-800: #6d1919;
+  --color-ember-900: #571818;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root {
+  color-scheme: dark;
+  /* Couleurs des bonshommes : claires, puisque le fond est sombre. */
+  --figure-stroke: #f3e1a8;
+  --figure-stroke-dim: #55504a;
+  --figure-prop: #2a2622;
+}
+
+/* À poser sur un conteneur clair (aperçu produit, export PNG) */
+.figure-light {
+  --figure-stroke: #16130f;
+  --figure-stroke-dim: #b3aca1;
+  --figure-prop: #ece7dd;
+}
+
+body {
+  background: var(--color-ink-950);
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Masque la barre de défilement du carrousel sans désactiver le geste */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Surfaces réutilisées dans tout l'espace membre */
+@utility card {
+  border-radius: calc(var(--spacing) * 6);
+  border: 1px solid color-mix(in oklab, #fff 8%, transparent);
+  background-color: color-mix(in oklab, #fff 3%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
