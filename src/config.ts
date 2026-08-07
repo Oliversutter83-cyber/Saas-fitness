@@ -4,15 +4,23 @@
  */
 
 export const SITE = {
-  name: "Fit Maison",
+  name: "ATLAS",
   /** Utilisé dans les titres de page et les partages */
-  tagline: "Le coach qui tient dans votre salon",
+  tagline: "La méthode pour s'entraîner chez soi",
   description:
-    "Des programmes d'entraînement à la maison, sans matériel et sans vidéo à regarder : chaque exercice est expliqué en carrousel, étape par étape. 20 à 30 minutes par séance.",
+    "Des programmes d'entraînement à la maison, sans matériel et sans vidéo à regarder : chaque mouvement est animé et décomposé étape par étape. 20 à 30 minutes par séance.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  email: "contact@fitmaison.fr",
-  instagram: "https://instagram.com/",
-  tiktok: "https://tiktok.com/",
+  email: "contact@atlas-training.fr",
+
+  /**
+   * Réseaux sociaux. Vérifiez que le pseudo est libre AVANT de le figer ici :
+   * instagram.com/<pseudo> et tiktok.com/@<pseudo> doivent afficher une page
+   * introuvable. Prenez le même pseudo sur les deux plateformes.
+   * Ce pseudo alimente aussi les visuels générés dans /app/kit-pub.
+   */
+  handle: "@atlas.training",
+  instagram: "https://instagram.com/atlas.training",
+  tiktok: "https://tiktok.com/@atlas.training",
 };
 
 /**
@@ -69,7 +77,7 @@ export const PLANS: Record<
   },
 };
 
-export const TRIAL_DAYS = 7;
+export const TRIAL_DAYS = 3;
 
 export function planFromPriceId(priceId: string | null | undefined): PlanId | null {
   if (!priceId) return null;

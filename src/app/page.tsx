@@ -468,6 +468,24 @@ export default async function LandingPage() {
             <div>
               <Logo />
               <p className="mt-3 max-w-xs text-sm text-white/40">{SITE.tagline}</p>
+              <div className="mt-4 flex gap-2">
+                <a
+                  href={SITE.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/60 transition hover:border-brand-400/40 hover:text-white"
+                >
+                  Instagram
+                </a>
+                <a
+                  href={SITE.tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/60 transition hover:border-brand-400/40 hover:text-white"
+                >
+                  TikTok
+                </a>
+              </div>
             </div>
             <nav className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm text-white/50">
               <Link href="/exercices" className="hover:text-white">

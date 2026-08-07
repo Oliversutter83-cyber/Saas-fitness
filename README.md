@@ -1,4 +1,4 @@
-# Fit Maison — SaaS de fitness à la maison
+# ATLAS — SaaS de fitness à la maison
 
 Un site d'abonnement (pas une application mobile) qui vend des programmes
 d'entraînement à faire chez soi, sans matériel. Les mouvements ne sont pas
@@ -124,8 +124,11 @@ même activé correctement.
      ces informations sont obligatoires et Stripe les demandera ;
    - renseignez `OWNER_EMAIL` pour que `/app/kit-pub` ne soit visible que par
      vous ;
-   - remplacez le nom, les tarifs et les liens de réseaux sociaux dans
-     `src/config.ts`.
+   - vérifiez que le pseudo `@atlas.training` est bien libre sur Instagram
+     (`instagram.com/atlas.training`) et TikTok (`tiktok.com/@atlas.training`),
+     et prenez le même sur les deux ; sinon changez `handle`, `instagram` et
+     `tiktok` dans `src/config.ts` ;
+   - vérifiez le nom à l'INPI avant de communiquer dessus.
 
 ---
 

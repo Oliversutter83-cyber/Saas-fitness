@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { FigureBody } from "@/components/Figure";
+import { TRIAL_DAYS } from "@/config";
 import { CATEGORIES, keyPoseOf, type Category, type Exercise } from "@/content/exercises";
 
 /**
@@ -48,7 +49,7 @@ export function CarouselStudio({
   const [hook, setHook] = useState("5 exercices pour se muscler sans matériel");
   const [kicker, setKicker] = useState("À faire chez soi, 20 minutes");
   const [ctaTitle, setCtaTitle] = useState("Le programme complet est en bio");
-  const [ctaSubtitle, setCtaSubtitle] = useState("4 semaines · 7 jours d'essai");
+  const [ctaSubtitle, setCtaSubtitle] = useState(`4 semaines · ${TRIAL_DAYS} jours d'essai`);
   const [count, setCount] = useState(5);
 
   const pool = useMemo(

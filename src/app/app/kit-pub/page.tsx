@@ -17,7 +17,6 @@ export default async function KitPubPage() {
   const owner = process.env.OWNER_EMAIL?.trim().toLowerCase();
   if (owner && user.email !== owner) notFound();
 
-  const handle = SITE.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\/?/, "@") || "@";
 
   return (
     <div className="space-y-6">
@@ -40,11 +39,7 @@ export default async function KitPubPage() {
         </p>
       )}
 
-      <CarouselStudio
-        exercises={EXERCISES}
-        siteName={SITE.name}
-        handle={handle === "@" ? `@${SITE.name.toLowerCase().replace(/\s+/g, "")}` : handle}
-      />
+      <CarouselStudio exercises={EXERCISES} siteName={SITE.name} handle={SITE.handle} />
 
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
         <h2 className="font-extrabold text-white">Comment s&apos;en servir</h2>
