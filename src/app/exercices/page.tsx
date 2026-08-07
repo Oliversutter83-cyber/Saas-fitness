@@ -2,13 +2,20 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Figure } from "@/components/Figure";
 import { Button, Container, Logo } from "@/components/ui";
-import { CATEGORIES, EXERCISES, keyPoseOf, type Category } from "@/content/exercises";
+import {
+  CATEGORIES,
+  EXERCISES,
+  exercisesByFamily,
+  keyPoseOf,
+  type Category,
+  type Exercise,
+} from "@/content/exercises";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Tous les exercices à faire à la maison",
   description:
-    "La bibliothèque complète des exercices sans matériel : chaque mouvement est décomposé en étapes illustrées, avec les points de technique et les erreurs à éviter.",
+    "La bibliothèque complète des exercices sans matériel, rangée par famille de mouvement : toutes les pompes ensemble, tous les squats ensemble, de la variante la plus facile à la plus difficile.",
 };
 
 const LEVEL_LABELS = ["", "Facile", "Intermédiaire", "Difficile"];
@@ -21,6 +28,7 @@ export default async function ExercicesPage({
   const [{ categorie }, user] = await Promise.all([searchParams, getCurrentUser()]);
   const active = (categorie ?? "") as Category | "";
   const list = active ? EXERCISES.filter((e) => e.category === active) : EXERCISES;
+  const groups = exercisesByFamily(list);
 
   return (
     <div className="min-h-dvh bg-ink-950">
@@ -36,17 +44,17 @@ export default async function ExercicesPage({
       </header>
 
       <Container className="py-14">
-        <h1 className="text-4xl font-extrabold tracking-tight text-white">
-          {EXERCISES.length} exercices, expliqués étape par étape
+        <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+          {EXERCISES.length} exercices, rangés par famille
         </h1>
-        <p className="mt-3 max-w-2xl leading-relaxed text-white/55">
-          Tous réalisables chez vous. Aucun matériel, hors une chaise et un mur. Chaque fiche montre
-          le mouvement en carrousel, les consignes qui protègent le dos et les genoux, et les erreurs
-          classiques.
+        <p className="mt-3 max-w-2xl leading-relaxed text-white/60">
+          Toutes les variantes d&apos;un même mouvement sont regroupées et classées de la plus
+          accessible à la plus exigeante. Vous voyez d&apos;un coup d&apos;œil par où commencer et
+          quelle est l&apos;étape suivante.
         </p>
 
         <nav className="mt-8 flex flex-wrap gap-2">
-          <FilterLink href="/exercices" label="Tous" active={!active} />
+          <FilterLink href="/exercices" label="Tout" active={!active} />
           {(Object.keys(CATEGORIES) as Category[]).map((key) => (
             <FilterLink
               key={key}
@@ -57,34 +65,60 @@ export default async function ExercicesPage({
           ))}
         </nav>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((exercise) => (
-            <Link
-              key={exercise.slug}
-              href={`/exercices/${exercise.slug}`}
-              className="group rounded-3xl border border-white/10 p-5 transition hover:border-brand-400 hover:shadow-sm"
+        {/* Sommaire : sur téléphone, il évite de faire défiler toute la page */}
+        <div className="mt-6 flex flex-wrap gap-2">
+          {groups.map((group) => (
+            <a
+              key={group.family}
+              href={`#${group.family}`}
+              className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/60 transition hover:border-brand-400/40 hover:text-white"
             >
-              <div className="rounded-2xl bg-white/5 py-2">
-                <Figure
-                  pose={keyPoseOf(exercise)}
-                  className="h-36 w-full"
-                />
-              </div>
-              <div className="mt-4 flex items-start justify-between gap-3">
-                <h2 className="font-bold text-white">{exercise.name}</h2>
-                <span className="shrink-0 rounded-full bg-white/5 px-2 py-0.5 text-[0.7rem] font-semibold text-white/55">
-                  {LEVEL_LABELS[exercise.level]}
+              {group.label}
+              <span className="ml-1.5 text-white/35">{group.exercises.length}</span>
+            </a>
+          ))}
+        </div>
+
+        <div className="mt-12 space-y-14">
+          {groups.map((group) => (
+            <section key={group.family} id={group.family} className="scroll-mt-20">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h2 className="text-2xl font-extrabold text-white">
+                  <span className="mr-2" aria-hidden>
+                    {group.emoji}
+                  </span>
+                  {group.label}
+                </h2>
+                <span className="text-sm text-white/40">
+                  {group.exercises.length} variante{group.exercises.length > 1 ? "s" : ""}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-white/55">{exercise.muscles.join(" · ")}</p>
-            </Link>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">{group.blurb}</p>
+
+              {group.exercises.length > 1 && (
+                <p className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-brand-300">
+                  <span aria-hidden>→</span> De la plus facile à la plus difficile
+                </p>
+              )}
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.exercises.map((exercise, index) => (
+                  <ExerciseCard
+                    key={exercise.slug}
+                    exercise={exercise}
+                    step={group.exercises.length > 1 ? index + 1 : undefined}
+                    total={group.exercises.length}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </Container>
 
-      <section className="bg-ink-950 py-16">
+      <section className="bg-ink-900 py-16">
         <Container className="text-center">
-          <h2 className="text-3xl font-extrabold text-white">
+          <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
             Les exercices, c&apos;est bien. Un programme, c&apos;est mieux.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-white/55">
@@ -105,6 +139,39 @@ export default async function ExercicesPage({
   );
 }
 
+function ExerciseCard({
+  exercise,
+  step,
+  total,
+}: {
+  exercise: Exercise;
+  step?: number;
+  total: number;
+}) {
+  return (
+    <Link
+      href={`/exercices/${exercise.slug}`}
+      className="group rounded-3xl border border-white/10 p-5 transition hover:border-brand-400/50 hover:bg-white/[0.03]"
+    >
+      <div className="relative rounded-2xl bg-white/5 py-2">
+        <Figure pose={keyPoseOf(exercise)} className="h-36 w-full" />
+        {step && (
+          <span className="absolute left-3 top-3 rounded-full bg-ink-950/80 px-2 py-0.5 text-[0.7rem] font-bold text-brand-300 tabular-nums">
+            {step}/{total}
+          </span>
+        )}
+      </div>
+      <div className="mt-4 flex items-start justify-between gap-3">
+        <h3 className="font-bold text-white">{exercise.name}</h3>
+        <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[0.7rem] font-semibold text-white/60">
+          {LEVEL_LABELS[exercise.level]}
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-white/50">{exercise.muscles.join(" · ")}</p>
+    </Link>
+  );
+}
+
 function FilterLink({
   href,
   label,
@@ -118,7 +185,7 @@ function FilterLink({
     <Link
       href={href}
       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-        active ? "bg-white/10 text-white" : "bg-white/5 text-white/70 hover:bg-white/10"
+        active ? "bg-brand-400 text-ink-950" : "bg-white/5 text-white/70 hover:bg-white/10"
       }`}
     >
       {label}

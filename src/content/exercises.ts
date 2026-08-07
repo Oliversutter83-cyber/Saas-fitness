@@ -9,10 +9,93 @@ import type { PoseName } from "@/content/poses";
 
 export type Category = "jambes" | "haut" | "gainage" | "cardio" | "mobilite";
 
+/**
+ * Famille de mouvement : elle rassemble les variantes d'un même geste, de la
+ * plus accessible à la plus exigeante. C'est ce qui permet de dire « voilà
+ * toutes les pompes, et voilà dans quel ordre les aborder » — l'information
+ * qu'un pratiquant cherche vraiment quand il regarde une bibliothèque
+ * d'exercices.
+ */
+export type FamilySlug =
+  | "pompes"
+  | "squats"
+  | "fentes"
+  | "fessiers"
+  | "triceps"
+  | "dos"
+  | "mollets"
+  | "gainage"
+  | "abdos"
+  | "cardio"
+  | "mobilite";
+
+export const FAMILIES: Record<
+  FamilySlug,
+  { label: string; emoji: string; blurb: string }
+> = {
+  pompes: {
+    label: "Pompes",
+    emoji: "🙌",
+    blurb: "La poussée du haut du corps. Montez l'appui pour alléger, descendez-le pour corser.",
+  },
+  squats: {
+    label: "Squats",
+    emoji: "🦵",
+    blurb: "Le mouvement de base des jambes. On travaille d'abord la profondeur, puis l'explosivité.",
+  },
+  fentes: {
+    label: "Fentes",
+    emoji: "🚶",
+    blurb: "Une jambe à la fois : c'est ce qui corrige les déséquilibres entre la droite et la gauche.",
+  },
+  fessiers: {
+    label: "Fessiers",
+    emoji: "🍑",
+    blurb: "Le travail direct des fessiers, sans charge et sans impact.",
+  },
+  triceps: {
+    label: "Triceps",
+    emoji: "💪",
+    blurb: "L'arrière du bras, avec une simple chaise.",
+  },
+  dos: {
+    label: "Dos & lombaires",
+    emoji: "🔙",
+    blurb: "La chaîne arrière, celle qui tient la posture. Difficile à travailler sans matériel : d'où sa place à part.",
+  },
+  mollets: {
+    label: "Mollets",
+    emoji: "🦶",
+    blurb: "Petit muscle, grosse endurance : on cherche l'amplitude et la lenteur.",
+  },
+  gainage: {
+    label: "Gainage",
+    emoji: "🧱",
+    blurb: "Tenir la position sans bouger. C'est ce qui protège le bas du dos sur tous les autres exercices.",
+  },
+  abdos: {
+    label: "Abdominaux",
+    emoji: "🔥",
+    blurb: "Le travail dynamique de la sangle abdominale, du plus simple au plus exigeant.",
+  },
+  cardio: {
+    label: "Cardio",
+    emoji: "⚡",
+    blurb: "Faire monter le souffle. Certains sont silencieux, d'autres non : c'est indiqué sur chaque fiche.",
+  },
+  mobilite: {
+    label: "Mobilité & étirements",
+    emoji: "🧘",
+    blurb: "Avant pour préparer, après pour récupérer.",
+  },
+};
+
 export type Exercise = {
   slug: string;
   name: string;
   category: Category;
+  /** Famille de mouvement : regroupe les variantes d'un même geste */
+  family: FamilySlug;
   /** 1 = accessible à tous, 3 = demande déjà du niveau */
   level: 1 | 2 | 3;
   muscles: string[];
@@ -41,6 +124,7 @@ export const EXERCISES: Exercise[] = [
     slug: "squat",
     name: "Squat",
     category: "jambes",
+    family: "squats",
     level: 1,
     muscles: ["Quadriceps", "Fessiers", "Ischio-jambiers"],
     equipment: "aucun",
@@ -83,6 +167,7 @@ export const EXERCISES: Exercise[] = [
     slug: "fente-avant",
     name: "Fente avant",
     category: "jambes",
+    family: "fentes",
     level: 2,
     muscles: ["Quadriceps", "Fessiers"],
     equipment: "aucun",
@@ -120,6 +205,7 @@ export const EXERCISES: Exercise[] = [
     slug: "fente-arriere",
     name: "Fente arrière",
     category: "jambes",
+    family: "fentes",
     level: 1,
     muscles: ["Fessiers", "Quadriceps"],
     equipment: "aucun",
@@ -155,6 +241,7 @@ export const EXERCISES: Exercise[] = [
     slug: "squat-saute",
     name: "Squat sauté",
     category: "jambes",
+    family: "squats",
     level: 3,
     muscles: ["Quadriceps", "Fessiers", "Mollets"],
     equipment: "aucun",
@@ -193,6 +280,7 @@ export const EXERCISES: Exercise[] = [
     slug: "pont-fessier",
     name: "Pont fessier",
     category: "jambes",
+    family: "fessiers",
     level: 1,
     muscles: ["Fessiers", "Ischio-jambiers", "Lombaires"],
     equipment: "aucun",
@@ -228,6 +316,7 @@ export const EXERCISES: Exercise[] = [
     slug: "chaise-mur",
     name: "Chaise contre le mur",
     category: "jambes",
+    family: "squats",
     level: 1,
     muscles: ["Quadriceps", "Fessiers"],
     equipment: "mur",
@@ -258,6 +347,7 @@ export const EXERCISES: Exercise[] = [
     slug: "fente-bulgare",
     name: "Fente bulgare",
     category: "jambes",
+    family: "fentes",
     level: 3,
     muscles: ["Quadriceps", "Fessiers"],
     equipment: "chaise",
@@ -294,6 +384,7 @@ export const EXERCISES: Exercise[] = [
     slug: "mollets",
     name: "Extensions mollets",
     category: "jambes",
+    family: "mollets",
     level: 1,
     muscles: ["Mollets"],
     equipment: "aucun",
@@ -325,6 +416,7 @@ export const EXERCISES: Exercise[] = [
     slug: "pompes",
     name: "Pompes",
     category: "haut",
+    family: "pompes",
     level: 2,
     muscles: ["Pectoraux", "Triceps", "Épaules"],
     equipment: "aucun",
@@ -366,6 +458,7 @@ export const EXERCISES: Exercise[] = [
     slug: "pompes-genoux",
     name: "Pompes sur les genoux",
     category: "haut",
+    family: "pompes",
     level: 1,
     muscles: ["Pectoraux", "Triceps"],
     equipment: "aucun",
@@ -396,6 +489,7 @@ export const EXERCISES: Exercise[] = [
     slug: "pompes-inclinees",
     name: "Pompes inclinées",
     category: "haut",
+    family: "pompes",
     level: 1,
     muscles: ["Pectoraux", "Triceps", "Épaules"],
     equipment: "chaise",
@@ -431,6 +525,7 @@ export const EXERCISES: Exercise[] = [
     slug: "dips-chaise",
     name: "Dips sur chaise",
     category: "haut",
+    family: "triceps",
     level: 2,
     muscles: ["Triceps", "Épaules", "Pectoraux"],
     equipment: "chaise",
@@ -466,6 +561,7 @@ export const EXERCISES: Exercise[] = [
     slug: "pompes-piquees",
     name: "Pompes piquées",
     category: "haut",
+    family: "pompes",
     level: 3,
     muscles: ["Épaules", "Triceps"],
     equipment: "aucun",
@@ -496,6 +592,7 @@ export const EXERCISES: Exercise[] = [
     slug: "superman",
     name: "Superman",
     category: "haut",
+    family: "dos",
     level: 1,
     muscles: ["Lombaires", "Fessiers", "Dos"],
     equipment: "aucun",
@@ -532,6 +629,7 @@ export const EXERCISES: Exercise[] = [
     slug: "planche",
     name: "Planche (gainage)",
     category: "gainage",
+    family: "gainage",
     level: 1,
     muscles: ["Abdominaux", "Lombaires", "Épaules"],
     equipment: "aucun",
@@ -562,6 +660,7 @@ export const EXERCISES: Exercise[] = [
     slug: "planche-laterale",
     name: "Planche latérale",
     category: "gainage",
+    family: "gainage",
     level: 2,
     muscles: ["Obliques", "Abdominaux"],
     equipment: "aucun",
@@ -588,6 +687,7 @@ export const EXERCISES: Exercise[] = [
     slug: "grimpeur",
     name: "Grimpeur (mountain climber)",
     category: "gainage",
+    family: "gainage",
     level: 2,
     muscles: ["Abdominaux", "Épaules", "Cardio"],
     equipment: "aucun",
@@ -617,6 +717,7 @@ export const EXERCISES: Exercise[] = [
     slug: "crunch",
     name: "Crunch",
     category: "gainage",
+    family: "abdos",
     level: 1,
     muscles: ["Grand droit"],
     equipment: "aucun",
@@ -648,6 +749,7 @@ export const EXERCISES: Exercise[] = [
     slug: "releve-jambes",
     name: "Relevé de jambes",
     category: "gainage",
+    family: "abdos",
     level: 2,
     muscles: ["Abdominaux bas"],
     equipment: "aucun",
@@ -681,6 +783,7 @@ export const EXERCISES: Exercise[] = [
     slug: "dead-bug",
     name: "Dead bug",
     category: "gainage",
+    family: "abdos",
     level: 1,
     muscles: ["Abdominaux profonds", "Coordination"],
     equipment: "aucun",
@@ -714,6 +817,7 @@ export const EXERCISES: Exercise[] = [
     slug: "hollow-hold",
     name: "Hollow hold",
     category: "gainage",
+    family: "abdos",
     level: 3,
     muscles: ["Abdominaux", "Fléchisseurs de hanche"],
     equipment: "aucun",
@@ -742,6 +846,7 @@ export const EXERCISES: Exercise[] = [
     slug: "jumping-jack",
     name: "Jumping jack",
     category: "cardio",
+    family: "cardio",
     level: 1,
     muscles: ["Cardio", "Épaules", "Mollets"],
     equipment: "aucun",
@@ -774,6 +879,7 @@ export const EXERCISES: Exercise[] = [
     slug: "montees-genoux",
     name: "Montées de genoux",
     category: "cardio",
+    family: "cardio",
     level: 1,
     muscles: ["Cardio", "Abdominaux", "Quadriceps"],
     equipment: "aucun",
@@ -798,6 +904,7 @@ export const EXERCISES: Exercise[] = [
     slug: "talons-fesses",
     name: "Talons-fesses",
     category: "cardio",
+    family: "cardio",
     level: 1,
     muscles: ["Cardio", "Ischio-jambiers"],
     equipment: "aucun",
@@ -822,6 +929,7 @@ export const EXERCISES: Exercise[] = [
     slug: "corde-a-sauter",
     name: "Corde à sauter (sans corde)",
     category: "cardio",
+    family: "cardio",
     level: 1,
     muscles: ["Cardio", "Mollets"],
     equipment: "aucun",
@@ -846,6 +954,7 @@ export const EXERCISES: Exercise[] = [
     slug: "patineur",
     name: "Patineur",
     category: "cardio",
+    family: "cardio",
     level: 2,
     muscles: ["Fessiers", "Cardio", "Équilibre"],
     equipment: "aucun",
@@ -871,6 +980,7 @@ export const EXERCISES: Exercise[] = [
     slug: "burpee",
     name: "Burpee",
     category: "cardio",
+    family: "cardio",
     level: 3,
     muscles: ["Corps entier", "Cardio"],
     equipment: "aucun",
@@ -917,6 +1027,7 @@ export const EXERCISES: Exercise[] = [
     slug: "etirement-ischios",
     name: "Étirement ischio-jambiers",
     category: "mobilite",
+    family: "mobilite",
     level: 1,
     muscles: ["Ischio-jambiers", "Bas du dos"],
     equipment: "aucun",
@@ -942,6 +1053,7 @@ export const EXERCISES: Exercise[] = [
     slug: "etirement-quadriceps",
     name: "Étirement quadriceps",
     category: "mobilite",
+    family: "mobilite",
     level: 1,
     muscles: ["Quadriceps", "Fléchisseurs de hanche"],
     equipment: "aucun",
@@ -967,6 +1079,7 @@ export const EXERCISES: Exercise[] = [
     slug: "posture-enfant",
     name: "Posture de l'enfant",
     category: "mobilite",
+    family: "mobilite",
     level: 1,
     muscles: ["Dos", "Hanches", "Épaules"],
     equipment: "aucun",
@@ -987,6 +1100,7 @@ export const EXERCISES: Exercise[] = [
     slug: "chat-vache",
     name: "Chat-vache",
     category: "mobilite",
+    family: "mobilite",
     level: 1,
     muscles: ["Colonne vertébrale", "Abdominaux"],
     equipment: "aucun",
@@ -1010,6 +1124,33 @@ export const EXERCISES: Exercise[] = [
 ];
 
 export const EXERCISE_BY_SLUG = new Map(EXERCISES.map((e) => [e.slug, e]));
+
+/**
+ * Les familles, chacune avec ses variantes classées de la plus accessible à la
+ * plus exigeante. Le classement suit le niveau déclaré, puis la chaîne
+ * easier/harder pour départager deux exercices de même niveau.
+ */
+export function exercisesByFamily(list: Exercise[] = EXERCISES) {
+  const order = (Object.keys(FAMILIES) as FamilySlug[]);
+
+  return order
+    .map((family) => ({
+      family,
+      ...FAMILIES[family],
+      exercises: list
+        .filter((e) => e.family === family)
+        .sort((a, b) => {
+          if (a.level !== b.level) return a.level - b.level;
+          // À niveau égal, celui qui est désigné comme « version plus facile »
+          // de l'autre passe devant.
+          if (b.easier === a.slug || a.harder === b.slug) return -1;
+          if (a.easier === b.slug || b.harder === a.slug) return 1;
+          return a.name.localeCompare(b.name, "fr");
+        }),
+    }))
+    .filter((group) => group.exercises.length > 0);
+}
+
 
 /**
  * La posture qui représente le mieux l'exercice sur une vignette.
