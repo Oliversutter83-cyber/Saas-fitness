@@ -49,6 +49,7 @@ export function Telephone({
   largeur,
   uid,
   basVisible,
+  lueur = "or",
   children,
 }: {
   x: number;
@@ -61,6 +62,12 @@ export function Telephone({
    * termine là — sans cette information, l'appareil était coupé net par le bord.
    */
   basVisible?: number;
+  /**
+   * Halo doré derrière l'appareil. Il détache le téléphone d'un fond uni, mais
+   * sur une photo il salit la scène d'une tache jaune : on lui préfère alors
+   * une ombre neutre, qui pose l'objet sans le colorer.
+   */
+  lueur?: "or" | "ombre";
   children: React.ReactNode;
 }) {
   const hauteur = largeur * 2.05;
@@ -72,7 +79,7 @@ export function Telephone({
   // téléphone : dès qu'il dépassait largement du cadre, ces 72 % tombaient
   // hors champ et le bord de la slide tranchait l'écran en plein texte.
   const finFondu = Math.min(hauteur + bord * 3, (basVisible ?? Infinity) - y);
-  const debutFondu = finFondu - largeur * 0.5;
+  const debutFondu = finFondu - largeur * 0.36;
 
   return (
     <g transform={`translate(${x} ${y})`}>
@@ -88,8 +95,16 @@ export function Telephone({
           <stop offset="100%" stopColor="#6b635b" />
         </linearGradient>
         <radialGradient id={`halo-${uid}`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0%" stopColor="#ddb13c" stopOpacity={0.3} />
-          <stop offset="100%" stopColor="#ddb13c" stopOpacity={0} />
+          <stop
+            offset="0%"
+            stopColor={lueur === "ombre" ? "#000000" : "#ddb13c"}
+            stopOpacity={lueur === "ombre" ? 0.5 : 0.3}
+          />
+          <stop
+            offset="100%"
+            stopColor={lueur === "ombre" ? "#000000" : "#ddb13c"}
+            stopOpacity={0}
+          />
         </radialGradient>
         {/*
           Le téléphone s'efface vers le bas au lieu de s'arrêter net. C'est ce

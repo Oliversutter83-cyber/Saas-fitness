@@ -848,8 +848,81 @@ function Fond({
  * place manque — format carré, accroche de trois lignes — mieux vaut un
  * téléphone plus petit et lisible qu'un grand téléphone tranché en plein texte.
  */
-function largeurTelephone(w: number, place: number): number {
-  return Math.round(Math.min(w * 0.54, Math.max(w * 0.3, place / 1.42)));
+/** Une ligne dessinée : son bas et son bord droit, en coordonnées de slide. */
+type LigneDessinee = { bas: number; droite: number };
+
+/** Décrit les lignes d'un bloc empilé à partir de la ligne de base `y`. */
+function lignesDe(
+  bloc: Bloc,
+  x: number,
+  y: number,
+  lineHeight: number,
+): LigneDessinee[] {
+  return bloc.largeurs.map((largeur, i) => ({
+    bas: y + i * bloc.size * lineHeight + bloc.size * 0.26,
+    droite: x + largeur,
+  }));
+}
+
+/**
+ * Fait remonter le téléphone dans l'espace resté libre à droite du texte.
+ *
+ * Les titres sont alignés à gauche et remplissent rarement toute la largeur :
+ * sous « TOI ? » ou « 25 minutes chez toi », la moitié droite de la slide est
+ * vide. Poser l'appareil sagement sous la dernière ligne gaspillait cette
+ * place — et en carré, il n'en restait plus assez pour montrer autre chose
+ * qu'une tranche d'écran. On le glisse donc le long du texte, et il ne
+ * redescend que devant les lignes qui lui barrent vraiment la route.
+ */
+function hautTelephone(
+  lignes: LigneDessinee[],
+  xTel: number,
+  plafond: number,
+  ecart: number,
+): number {
+  let y = plafond;
+  for (const ligne of lignes) {
+    if (ligne.droite + ecart > xTel) y = Math.max(y, ligne.bas + ecart);
+  }
+  return Math.round(y);
+}
+
+/**
+ * L'écran doit rester lisible jusqu'au sélecteur « Animer / Étapes », qui se
+ * termine à 1,39 largeur sous le haut de l'appareil. En ajoutant la longueur du
+ * fondu, il faut 1,78 largeur de hauteur visible — sinon le sélecteur se dissout
+ * dans l'effacement et on ne voit plus que le début de l'écran.
+ */
+const HAUTEUR_UTILE = 1.78;
+
+/**
+ * Taille et position du téléphone.
+ *
+ * On essaie les tailles de la plus grande à la plus petite, et pour chacune
+ * d'abord le centre puis le bord droit. Le premier essai qui laisse voir
+ * l'écran jusqu'au sélecteur l'emporte : les formats hauts gardent donc un
+ * grand appareil centré, et le carré, où la hauteur manque, obtient un
+ * appareil décalé à droite qui remonte le long du texte.
+ */
+function poserTelephone(
+  w: number,
+  h: number,
+  lignes: LigneDessinee[],
+  plafond: number,
+): { x: number; y: number; largeur: number } {
+  const ecart = Math.round(w * 0.04);
+  const mini = Math.round(w * 0.32);
+  let repli = { x: Math.round((w - mini) / 2), y: plafond, largeur: mini };
+  for (let largeur = Math.round(w * 0.54); largeur >= mini; largeur -= 8) {
+    for (const x of [(w - largeur) / 2, w - largeur - ecart]) {
+      const y = hautTelephone(lignes, x, plafond, ecart);
+      repli = { x: Math.round(x), y, largeur };
+      if (h - y >= largeur * HAUTEUR_UTILE) {
+        return { x: Math.round(x), y, largeur };
+      }
+    }
+  }
+  return repli;
 }
 
 function SlideSvg({
@@ -915,7 +988,7 @@ function SlideSvg({
             réellement disponible ; en vertical, où la hauteur ne manque pas,
             rien ne change.
           */
-          const echelle = avecTelephone ? Math.min(1, (h / w) * 0.74) : 1;
+          const echelle = avecTelephone ? Math.min(1, (h / w) * 0.66) : 1;
           const etiquette = ajuster(slide.kicker.toUpperCase(), {
             largeurMax: largeur,
             lignesMax: 1,
@@ -976,12 +1049,18 @@ function SlideSvg({
           const yReponse =
             yQuestion + (q.hauteur - q.size) + ecartReponse + r.size;
 
-          // `yReponse` est la ligne de base de la PREMIÈRE ligne : sans ajouter
-          // la hauteur des suivantes, le téléphone recouvrait la fin d'une
-          // réponse sur deux lignes.
-          const yTel =
-            yReponse + (r.hauteur - r.size) + Math.round(w * 0.055 * echelle);
-          const largeurTel = largeurTelephone(w, h - yTel);
+          // Le téléphone se place d'après les lignes réellement dessinées : il
+          // longe le texte au lieu d'attendre sous la dernière ligne.
+          const tel = poserTelephone(
+            w,
+            h,
+            [
+              ...lignesDe(etiquette, marge, yEtiquette, 1.2),
+              ...lignesDe(q, marge, yQuestion, 1.06),
+              ...lignesDe(r, marge, yReponse, 1.25),
+            ],
+            hautDuBloc,
+          );
 
           return (
             <>
@@ -1026,26 +1105,37 @@ function SlideSvg({
               />
               {avecTelephone && slide.exemple && (
                 <Telephone
-                  x={(w - largeurTel) / 2}
-                  y={yTel}
-                  largeur={largeurTel}
+                  x={tel.x}
+                  y={tel.y}
+                  largeur={tel.largeur}
                   uid={uid}
                   basVisible={h}
+                  lueur={fond ? "ombre" : "or"}
                 >
                   <EcranExercice
-                    largeur={largeurTel}
+                    largeur={tel.largeur}
                     exercise={slide.exemple}
                     font={font}
                   />
                 </Telephone>
               )}
-              {!avecTelephone && (
+              {/*
+                Quand le téléphone est décalé à droite, le bas à gauche reste
+                vide : c'est la place du pseudo et de l'invitation à glisser.
+                Quand il est centré, il occupe déjà ce coin — on n'écrit rien
+                dessus.
+              */}
+              {(!avecTelephone || tel.x > w * 0.42) && (
                 <LigneAjustee
                   texte={`${handle} · glisse →`}
                   x={marge}
                   y={h - 80}
                   size={Math.round(w * 0.03)}
-                  largeurMax={w - marge * 2}
+                  largeurMax={
+                    avecTelephone
+                      ? Math.max(240, tel.x - marge - 24)
+                      : w - marge * 2
+                  }
                   fill={c.muted}
                   font={font}
                   weight={700}
@@ -1063,11 +1153,14 @@ function SlideSvg({
             // qui donne l'impression d'un produit posé dans la scène plutôt que
             // d'une capture d'écran collée au milieu.
             const marge = 80;
+            // Même arbitrage que sur l'accroche : le titre cède la hauteur dont
+            // le téléphone a besoin pour montrer le mouvement.
+            const echelle = Math.min(1, (h / w) * 0.66);
             const titre = ajuster(slide.exercise.name.toUpperCase(), {
               largeurMax: w - marge * 2,
               lignesMax: 2,
-              sizeMax: Math.round(w * 0.085),
-              sizeMin: Math.round(w * 0.048),
+              sizeMax: Math.round(w * 0.085 * echelle),
+              sizeMin: Math.round(w * 0.048 * echelle),
               weight: 800,
               font,
               lineHeight: 1.06,
@@ -1075,32 +1168,37 @@ function SlideSvg({
             const sous = ajuster(slide.caption, {
               largeurMax: w - marge * 2,
               lignesMax: 2,
-              sizeMax: Math.round(w * 0.036),
-              sizeMin: Math.round(w * 0.026),
+              sizeMax: Math.round(w * 0.036 * echelle),
+              sizeMin: Math.round(w * 0.026 * echelle),
               weight: 600,
               font,
               lineHeight: 1.3,
             });
-            const yTitre = Math.round(h * 0.1) + titre.size;
+            const hautDuBloc = Math.round(h * 0.09);
+            const yTitre = hautDuBloc + titre.size;
             const ySous =
               yTitre +
               (titre.hauteur - titre.size) +
-              Math.round(w * 0.035) +
+              Math.round(w * 0.035 * echelle) +
               sous.size;
-            // La légende peut tenir sur deux lignes : le téléphone se pose sous
-            // la dernière, pas sous la première.
-            const yTel =
-              ySous + (sous.hauteur - sous.size) + Math.round(w * 0.06);
-            const largeurTel = largeurTelephone(w, h - yTel);
+            const tel = poserTelephone(
+              w,
+              h,
+              [
+                ...lignesDe(titre, marge, yTitre, 1.06),
+                ...lignesDe(sous, marge, ySous, 1.3),
+              ],
+              hautDuBloc,
+            );
 
             return (
               <>
                 <text
                   x={marge}
-                  y={Math.round(h * 0.1) - Math.round(w * 0.03)}
+                  y={hautDuBloc - Math.round(w * 0.028)}
                   fill={c.accent}
                   fontFamily={font}
-                  fontSize={Math.round(w * 0.032)}
+                  fontSize={Math.round(w * 0.032 * echelle)}
                   fontWeight={800}
                   letterSpacing={3}
                 >
@@ -1127,14 +1225,15 @@ function SlideSvg({
                   ombre={ombre}
                 />
                 <Telephone
-                  x={(w - largeurTel) / 2}
-                  y={yTel}
-                  largeur={largeurTel}
+                  x={tel.x}
+                  y={tel.y}
+                  largeur={tel.largeur}
                   uid={uid}
                   basVisible={h}
+                  lueur={fond ? "ombre" : "or"}
                 >
                   <EcranExercice
-                    largeur={largeurTel}
+                    largeur={tel.largeur}
                     exercise={slide.exercise}
                     font={font}
                   />
@@ -1361,7 +1460,13 @@ function largeurTexte(
   return mesureur.measureText(texte).width + espacement;
 }
 
-type Bloc = { lignes: string[]; size: number; hauteur: number };
+type Bloc = {
+  lignes: string[];
+  size: number;
+  hauteur: number;
+  /** Largeur dessinée de chaque ligne : sert à savoir ce qui reste libre à droite. */
+  largeurs: number[];
+};
 
 type Mesure = {
   largeurMax: number;
@@ -1474,8 +1579,12 @@ function ajuster(
     lignes,
     size,
     hauteur: (Math.max(1, lignes.length) - 1) * size * lineHeight + size,
+    largeurs: lignes.map((l) =>
+      largeurTexte(l, size, weight, font, letterSpacing),
+    ),
   });
-  if (mots.length === 0) return { lignes: [], size: sizeMin, hauteur: 0 };
+  if (mots.length === 0)
+    return { lignes: [], size: sizeMin, hauteur: 0, largeurs: [] };
 
   // 1. La plage de tailles prévue par la maquette.
   const pas = Math.max(1, Math.round(sizeMax * 0.04));
