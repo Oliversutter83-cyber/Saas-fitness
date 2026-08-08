@@ -50,14 +50,24 @@ const poses = {
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
   },
+  // Position ouverte du jumping jack : c'est le moment où l'on est EN L'AIR.
+  //
+  // Trois contraintes se croisent ici :
+  // — la cheville doit rester au-dessus de GROUND_Y - 14, sinon le pied est
+  //   dessiné à plat comme s'il touchait le sol ;
+  // — le pied en l'air prolonge le tibia sur la moitié de sa longueur, donc une
+  //   jambe trop verticale ramène la pointe jusqu'au sol et le saut ne se voit
+  //   plus : les jambes sont franchement écartées, pas seulement levées ;
+  // — la zone visible s'arrête à y = 10, d'où les bras en V plutôt qu'à la
+  //   verticale, qui sortiraient du cadre.
   brasEnCroix: {
-    head: [100, 40],
-    neck: [100, 58],
-    hip: [100, 108],
-    armA: [[112, 36], [118, 16]],
-    armB: [[88, 36], [82, 16]],
-    legA: [[116, 144], [128, 178]],
-    legB: [[84, 144], [72, 178]],
+    head: [100, 32],
+    neck: [100, 50],
+    hip: [100, 100],
+    armA: [[116, 32], [128, 16]],
+    armB: [[84, 32], [72, 16]],
+    legA: [[120, 130], [143, 154]],
+    legB: [[80, 130], [57, 154]],
   },
 
   // ---------------------------------------------------------------- squat
@@ -79,14 +89,17 @@ const poses = {
     legA: [[110, 140], [100, 178]],
     legB: [[108, 142], [96, 178]],
   },
+  // Chevilles remontées à 152 : à 158, la pointe de pied — qui prolonge le tibia
+  // sur la moitié de sa longueur — redescendait à 4 px du sol et le saut ne se
+  // lisait pas. Le corps, lui, ne bouge pas.
   squatSaut: {
     head: [100, 26],
     neck: [100, 44],
     hip: [100, 94],
     armA: [[118, 56], [130, 34]],
     armB: [[82, 58], [70, 36]],
-    legA: [[112, 126], [118, 158]],
-    legB: [[88, 128], [82, 158]],
+    legA: [[114, 124], [126, 152]],
+    legB: [[86, 126], [74, 154]],
   },
   chaiseMur: {
     head: [84, 66],
@@ -431,14 +444,18 @@ const poses = {
     legA: [[107, 142], [108, 178]],
     legB: [[93, 142], [92, 178]],
   },
+  // La consigne dit « à peine décollé », et c'est juste : un vrai saut à la corde
+  // fait 2 ou 3 cm. Mais à cette échelle le décollage devenait invisible, donc on
+  // le force un peu — assez pour qu'on le voie, pas au point de contredire le
+  // texte.
   cordeHaut: {
     head: [100, 28],
     neck: [100, 46],
     hip: [100, 96],
     armA: [[116, 72], [128, 64]],
     armB: [[84, 72], [72, 64]],
-    legA: [[108, 130], [106, 160]],
-    legB: [[92, 130], [94, 160]],
+    legA: [[108, 128], [107, 156]],
+    legB: [[92, 128], [93, 156]],
   },
   patineurGauche: {
     head: [86, 44],
