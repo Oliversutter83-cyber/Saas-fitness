@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatedFigure } from "@/components/AnimatedFigure";
 import { Figure } from "@/components/Figure";
+import { OrbitFigure3D } from "@/components/Figure3D";
+import { useAnimatedPose3D } from "@/components/useAnimatedPose";
 import type { Exercise } from "@/content/exercises";
 
 /**
@@ -12,7 +14,11 @@ import type { Exercise } from "@/content/exercises";
  *  - « Animation » : le mouvement joué en continu, articulations interpolées,
  *    pour comprendre le geste d'un coup d'œil ;
  *  - « Étapes » : les positions clés une par une, qu'on fait défiler au doigt
- *    pour lire tranquillement la consigne de chaque temps.
+ *    pour lire tranquillement la consigne de chaque temps ;
+ *  - « Volume » : le même mouvement avec de la profondeur, qu'on fait tourner
+ *    pour le voir de face, de dos et des deux côtés. C'est ce mode qui répond
+ *    aux questions qu'une vue de profil laisse en suspens — l'écartement des
+ *    mains, l'alignement des genoux — quand on découvre un exercice.
  *
  * Le défilement natif avec scroll-snap est volontairement conservé en mode
  * étapes : c'est lui qui donne le geste tactile fluide sur mobile, sans
@@ -29,7 +35,9 @@ export function ExerciseCarousel({
 }) {
   const steps = exercise.steps;
   const trackRef = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<"anim" | "steps">(steps.length > 1 ? "anim" : "steps");
+  const [mode, setMode] = useState<"anim" | "steps" | "volume">(
+    steps.length > 1 ? "anim" : "steps",
+  );
   const [index, setIndex] = useState(0);
 
   const figureHeight = compact ? "h-44 w-full" : "h-64 w-full sm:h-72";
@@ -73,6 +81,8 @@ export function ExerciseCarousel({
             className={figureHeight}
             onSegmentChange={setIndex}
           />
+        ) : mode === "volume" ? (
+          <VolumeView exercise={exercise} figureHeight={figureHeight} />
         ) : (
           <div
             ref={trackRef}
@@ -144,26 +154,40 @@ export function ExerciseCarousel({
               />
             ))}
           </div>
+        ) : mode === "volume" ? (
+          <p className="whitespace-nowrap text-xs font-semibold text-brand-300">
+            ● Faites tourner
+          </p>
         ) : (
           <p className="whitespace-nowrap text-xs font-semibold text-brand-300">● En mouvement</p>
         )}
 
-        {steps.length > 1 && (
-          <div className="flex shrink-0 rounded-full bg-white/5 p-0.5">
-            <ModeButton active={mode === "anim"} onClick={() => setMode("anim")}>
-              ▶ Animer
-            </ModeButton>
-            <ModeButton
-              active={mode === "steps"}
-              onClick={() => {
-                setMode("steps");
-                setIndex(0);
-              }}
-            >
-              Étapes
-            </ModeButton>
-          </div>
-        )}
+        {/*
+          « Volume » est proposé même sur une posture unique — un étirement, un
+          gainage : tourner autour d'une position tenue est précisément ce qui
+          permet de vérifier qu'on la reproduit bien.
+        */}
+        <div className="flex shrink-0 rounded-full bg-white/5 p-0.5">
+          {steps.length > 1 && (
+            <>
+              <ModeButton active={mode === "anim"} onClick={() => setMode("anim")}>
+                ▶ Animer
+              </ModeButton>
+              <ModeButton
+                active={mode === "steps"}
+                onClick={() => {
+                  setMode("steps");
+                  setIndex(0);
+                }}
+              >
+                Étapes
+              </ModeButton>
+            </>
+          )}
+          <ModeButton active={mode === "volume"} onClick={() => setMode("volume")}>
+            ⬢ Volume
+          </ModeButton>
+        </div>
       </div>
 
       {/*
@@ -172,7 +196,7 @@ export function ExerciseCarousel({
         être lue. L'étape en cours est seulement mise en évidence, et le texte
         se lit à son propre rythme pendant que le mouvement tourne en boucle.
       */}
-      {mode === "anim" ? (
+      {mode !== "steps" ? (
         <ol className="mt-3 space-y-2">
           {steps.map((s, i) => (
             <li
@@ -225,6 +249,25 @@ function ModeButton({
       {children}
     </button>
   );
+}
+
+/**
+ * Le mouvement en volume. La posture animée est calculée ici puis confiée à la
+ * vue pivotable : le geste et la rotation avancent indépendamment, on peut donc
+ * tourner autour d'un mouvement qui continue de se jouer.
+ */
+function VolumeView({
+  exercise,
+  figureHeight,
+}: {
+  exercise: Exercise;
+  figureHeight: string;
+}) {
+  const pose = useAnimatedPose3D(
+    exercise.steps.map((s) => s.pose),
+    true,
+  );
+  return <OrbitFigure3D pose={pose} className={`${figureHeight} px-2 pb-2 pt-1`} />;
 }
 
 function CarouselButton({

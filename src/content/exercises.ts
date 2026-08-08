@@ -1130,19 +1130,19 @@ export const EXERCISES: Exercise[] = [
     mode: "reps",
     steps: [
       {
-        pose: "plancheHaute",
+        pose: "pompeLargeHaute",
         title: "Position de départ",
         detail:
           "En planche, mains nettement plus larges que les épaules — une largeur et demie d'épaules.",
       },
       {
-        pose: "pompeBasse",
+        pose: "pompeLargeBasse",
         title: "Descente",
         detail:
           "Descendez la poitrine vers le sol. Les coudes s'ouvrent davantage que sur une pompe classique.",
       },
       {
-        pose: "plancheHaute",
+        pose: "pompeLargeHaute",
         title: "Poussée",
         detail:
           "Repoussez le sol en gardant le corps gainé d'un bloc.",
@@ -1165,19 +1165,19 @@ export const EXERCISES: Exercise[] = [
     mode: "reps",
     steps: [
       {
-        pose: "plancheHaute",
+        pose: "pompeDiamantHaute",
         title: "Position de départ",
         detail:
           "En planche, mains jointes sous la poitrine : pouces et index forment un losange.",
       },
       {
-        pose: "pompeBasse",
+        pose: "pompeDiamantBasse",
         title: "Descente",
         detail:
           "Descendez la poitrine vers vos mains en gardant les coudes serrés le long du corps.",
       },
       {
-        pose: "plancheHaute",
+        pose: "pompeDiamantHaute",
         title: "Poussée",
         detail:
           "Poussez fort : ce sont les triceps qui font le travail, pas les pectoraux.",

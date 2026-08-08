@@ -21,6 +21,37 @@ export type Prop =
   /** Mur vertical. */
   | { kind: "wall"; x: number };
 
+/**
+ * Écartement gauche-droite, pour la vue en volume.
+ *
+ * Le dessin plat n'a que deux axes ; la troisième dimension est déduite de la
+ * convention « membre A devant, membre B derrière ». Par défaut les deux bras
+ * sont écartés de la largeur d'épaules et les deux jambes de la largeur de
+ * bassin, ce qui convient à presque tous les mouvements.
+ *
+ * Ces valeurs servent aux exceptions où l'écartement EST le point technique :
+ * une pompe diamant et une pompe prise large sont identiques de profil, et
+ * c'est précisément ce que la vue en volume doit montrer.
+ * 1 = largeur normale, 0.2 = mains jointes, 2 = prise très large.
+ */
+export type Spread = { hands?: number; feet?: number };
+
+/**
+ * Ce que représente l'écart horizontal entre le membre A et le membre B.
+ *
+ * Le dessin plat n'a qu'un axe horizontal, sur lequel deux choses très
+ * différentes se retrouvent confondues : une fente écarte les jambes d'avant en
+ * arrière, un squat sumo les écarte de gauche à droite, et dans les
+ * coordonnées, rien ne les distingue. Tant qu'on regarde de profil c'est sans
+ * conséquence — mais dès qu'on tourne autour du personnage, confondre les deux
+ * transformerait la fente en grand écart latéral.
+ *
+ * Par défaut l'écart est lu comme avant-arrière, ce qui vaut pour toutes les
+ * postures vues de profil. « lateral » marque celles qui sont dessinées de face
+ * ou de trois quarts, où l'écart est réellement gauche-droite.
+ */
+export type Axis = { arms?: "lateral"; legs?: "lateral" };
+
 export type Pose = {
   head: P;
   neck: P;
@@ -32,6 +63,8 @@ export type Pose = {
   legA: [P, P];
   legB: [P, P];
   props?: Prop[];
+  spread?: Spread;
+  axis?: Axis;
 };
 
 export const GROUND_Y = 178;
@@ -49,6 +82,7 @@ const poses = {
     armB: [[86, 80], [81, 106]],
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   // Position ouverte du jumping jack : c'est le moment où l'on est EN L'AIR.
   //
@@ -68,6 +102,7 @@ const poses = {
     armB: [[84, 32], [72, 16]],
     legA: [[120, 130], [143, 154]],
     legB: [[80, 130], [57, 154]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
 
   // Même position ouverte, mais un pied posé : c'est le jack sans saut, pour
@@ -81,6 +116,7 @@ const poses = {
     armB: [[88, 36], [82, 16]],
     legA: [[116, 144], [128, 178]],
     legB: [[84, 144], [72, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
 
   // ---------------------------------------------------------------- squat
@@ -113,6 +149,7 @@ const poses = {
     armB: [[82, 58], [70, 36]],
     legA: [[114, 124], [126, 152]],
     legB: [[86, 126], [74, 154]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   chaiseMur: {
     head: [84, 66],
@@ -132,6 +169,7 @@ const poses = {
     armB: [[86, 72], [81, 98]],
     legA: [[110, 134], [112, 168]],
     legB: [[90, 134], [88, 168]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
 
   // ---------------------------------------------------------------- fentes
@@ -420,6 +458,7 @@ const poses = {
     armB: [[88, 80], [92, 100]],
     legA: [[112, 110], [104, 136]],
     legB: [[100, 142], [100, 178]],
+    axis: { arms: "lateral" },
   },
   genouxHautsB: {
     head: [100, 38],
@@ -429,6 +468,7 @@ const poses = {
     armB: [[88, 78], [92, 58]],
     legA: [[100, 142], [100, 178]],
     legB: [[112, 110], [104, 136]],
+    axis: { arms: "lateral" },
   },
   talonsFessesA: {
     head: [100, 38],
@@ -438,6 +478,7 @@ const poses = {
     armB: [[88, 80], [92, 100]],
     legA: [[96, 144], [104, 116]],
     legB: [[102, 142], [102, 178]],
+    axis: { arms: "lateral" },
   },
   talonsFessesB: {
     head: [100, 38],
@@ -447,6 +488,7 @@ const poses = {
     armB: [[88, 78], [92, 58]],
     legA: [[102, 142], [102, 178]],
     legB: [[96, 144], [104, 116]],
+    axis: { arms: "lateral" },
   },
   cordeBas: {
     head: [100, 38],
@@ -456,6 +498,7 @@ const poses = {
     armB: [[84, 82], [72, 74]],
     legA: [[107, 142], [108, 178]],
     legB: [[93, 142], [92, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   // La consigne dit « à peine décollé », et c'est juste : un vrai saut à la corde
   // fait 2 ou 3 cm. Mais à cette échelle le décollage devenait invisible, donc on
@@ -469,6 +512,7 @@ const poses = {
     armB: [[84, 72], [72, 64]],
     legA: [[108, 128], [107, 156]],
     legB: [[92, 128], [93, 156]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   patineurGauche: {
     head: [86, 44],
@@ -478,6 +522,7 @@ const poses = {
     armB: [[104, 86], [116, 74]],
     legA: [[96, 142], [92, 178]],
     legB: [[112, 140], [132, 164]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   patineurDroit: {
     head: [114, 44],
@@ -487,6 +532,7 @@ const poses = {
     armB: [[96, 86], [84, 74]],
     legA: [[104, 142], [108, 178]],
     legB: [[88, 140], [68, 164]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
 
   // ------------------------------------------------------------ étirements
@@ -535,6 +581,50 @@ const poses = {
   // d'en dupliquer de fausses — la différence est dite dans le texte, là où
   // elle se voit.
   // ==================================================================
+
+  // Mêmes silhouettes que la pompe classique, mais avec l'écartement des mains
+  // renseigné : c'est la seule différence entre ces trois exercices, et elle
+  // n'apparaît que dans la vue en volume.
+  pompeLargeHaute: {
+    head: [164, 118],
+    neck: [150, 126],
+    hip: [104, 142],
+    armA: [[150, 150], [150, 176]],
+    armB: [[148, 152], [148, 178]],
+    legA: [[76, 154], [50, 174]],
+    legB: [[74, 156], [48, 176]],
+    spread: { hands: 2.1 },
+  },
+  pompeLargeBasse: {
+    head: [162, 142],
+    neck: [148, 150],
+    hip: [104, 158],
+    armA: [[161, 153], [150, 176]],
+    armB: [[159, 155], [148, 178]],
+    legA: [[76, 166], [50, 175]],
+    legB: [[74, 167], [48, 177]],
+    spread: { hands: 2.1 },
+  },
+  pompeDiamantHaute: {
+    head: [164, 118],
+    neck: [150, 126],
+    hip: [104, 142],
+    armA: [[150, 150], [150, 176]],
+    armB: [[148, 152], [148, 178]],
+    legA: [[76, 154], [50, 174]],
+    legB: [[74, 156], [48, 176]],
+    spread: { hands: 0.2 },
+  },
+  pompeDiamantBasse: {
+    head: [162, 142],
+    neck: [148, 150],
+    hip: [104, 158],
+    armA: [[161, 153], [150, 176]],
+    armB: [[159, 155], [148, 178]],
+    legA: [[76, 166], [50, 175]],
+    legB: [[74, 167], [48, 177]],
+    spread: { hands: 0.2 },
+  },
 
   // ------------------------------------------------- pompes : appuis variés
   pompeMuraleHaute: {
@@ -587,6 +677,7 @@ const poses = {
     armB: [[90, 82], [84, 104]],
     legA: [[124, 142], [132, 178]],
     legB: [[76, 142], [68, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   squatSumoBas: {
     head: [100, 62],
@@ -596,6 +687,7 @@ const poses = {
     armB: [[94, 98], [98, 120]],
     legA: [[128, 140], [136, 178]],
     legB: [[72, 140], [64, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   squatUneJambeHaut: {
     head: [104, 40],
@@ -627,6 +719,7 @@ const poses = {
     armB: [[96, 94], [108, 86]],
     legA: [[70, 144], [62, 178]],
     legB: [[112, 144], [134, 178]],
+    axis: { legs: "lateral" },
   },
   fenteCroiseeBas: {
     head: [100, 46],
@@ -636,6 +729,7 @@ const poses = {
     armB: [[92, 88], [84, 110]],
     legA: [[112, 144], [112, 178]],
     legB: [[84, 150], [58, 174]],
+    axis: { arms: "lateral" },
   },
   // Fente sautée : chevilles à 150-152, pointes dégagées comme pour les autres sauts.
   fenteSaut: {
@@ -646,6 +740,7 @@ const poses = {
     armB: [[88, 74], [78, 52]],
     legA: [[126, 124], [142, 150]],
     legB: [[76, 126], [58, 152]],
+    axis: { arms: "lateral" },
   },
 
   // ----------------------------------------------------- fessiers : variantes
@@ -714,6 +809,7 @@ const poses = {
     armB: [[138, 154], [140, 178]],
     legA: [[84, 152], [82, 176]],
     legB: [[64, 126], [46, 146]],
+    axis: { legs: "lateral" },
   },
   chienOiseau: {
     head: [150, 134],
@@ -743,6 +839,7 @@ const poses = {
     armB: [[86, 80], [81, 106]],
     legA: [[102, 142], [102, 178]],
     legB: [[86, 140], [76, 116]],
+    axis: { arms: "lateral" },
   },
   molletsUneJambeHaut: {
     head: [100, 30],
@@ -752,6 +849,7 @@ const poses = {
     armB: [[86, 72], [81, 98]],
     legA: [[102, 134], [102, 168]],
     legB: [[86, 132], [76, 108]],
+    axis: { arms: "lateral" },
   },
   marchePointeA: {
     head: [100, 30],
@@ -761,6 +859,7 @@ const poses = {
     armB: [[86, 72], [81, 98]],
     legA: [[112, 134], [118, 166]],
     legB: [[90, 134], [86, 168]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   marchePointeB: {
     head: [100, 30],
@@ -770,6 +869,7 @@ const poses = {
     armB: [[86, 72], [81, 98]],
     legA: [[110, 134], [114, 168]],
     legB: [[88, 134], [82, 166]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
 
   // ------------------------------------------------------ triceps : variantes
@@ -935,6 +1035,7 @@ const poses = {
     armB: [[84, 74], [92, 58]],
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
+    axis: { legs: "lateral" },
   },
   boxeDirect: {
     head: [100, 38],
@@ -944,6 +1045,7 @@ const poses = {
     armB: [[84, 74], [92, 58]],
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
+    axis: { legs: "lateral" },
   },
   genouxCroisesA: {
     head: [100, 40],
@@ -953,6 +1055,7 @@ const poses = {
     armB: [[86, 78], [80, 100]],
     legA: [[124, 116], [130, 142]],
     legB: [[92, 144], [90, 178]],
+    axis: { arms: "lateral" },
   },
   genouxCroisesB: {
     head: [100, 40],
@@ -962,6 +1065,7 @@ const poses = {
     armB: [[84, 80], [96, 98]],
     legA: [[108, 144], [110, 178]],
     legB: [[76, 116], [70, 142]],
+    axis: { arms: "lateral" },
   },
 
   // ---------------------------------------------------- mobilité : variantes
@@ -1002,6 +1106,7 @@ const poses = {
     armB: [[82, 72], [70, 94]],
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
   cerclesEpaulesHaut: {
     head: [100, 38],
@@ -1011,6 +1116,7 @@ const poses = {
     armB: [[82, 42], [74, 20]],
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
+    axis: { arms: "lateral", legs: "lateral" },
   },
 } as const satisfies Record<string, Pose>;
 
