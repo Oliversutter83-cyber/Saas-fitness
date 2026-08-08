@@ -374,9 +374,15 @@ function buildAdjustments(program: Program, profile: Profile): string[] {
     );
   }
 
+  // Annoncer une liste de remplacements quand le programme n'en demande aucun
+  // serait une promesse en l'air. On dit alors l'inverse, qui est un vrai
+  // argument : ce programme se fait déjà sans sauter.
   if (!profile.canJump) {
+    const swaps = buildSwaps(program, profile);
     lines.push(
-      "Vous ne pouvez pas sauter chez vous : les mouvements avec impact sont remplacés un par un, la liste est plus bas.",
+      swaps.length > 0
+        ? `Vous ne pouvez pas sauter chez vous : ${swaps.length} mouvement${swaps.length > 1 ? "s" : ""} de ce programme ${swaps.length > 1 ? "sont remplacés" : "est remplacé"}, la liste est plus bas.`
+        : "Vous ne pouvez pas sauter chez vous : ce programme n'en demande aucun, il se fait en silence et sans impact.",
     );
   }
 

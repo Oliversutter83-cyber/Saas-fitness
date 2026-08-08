@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ExerciseCarousel } from "@/components/ExerciseCarousel";
-import { formatClock, type Entry } from "@/content/playlist";
+import { entryEstimateSec, formatClock, type Entry } from "@/content/playlist";
 
 /**
  * Le lecteur de séance : une étape à la fois, un chronomètre, et le carrousel
@@ -36,8 +36,11 @@ export function SessionPlayer({ entries, sessionTitle, backHref, onFinish }: Pro
   const startedAtRef = useRef<number | null>(null);
   const elapsedBeforeRef = useRef(0);
 
+  // La durée annoncée compte aussi les exercices en répétitions, que le
+  // chronomètre ignore : c'est la même estimation que sur la page du programme,
+  // pour ne pas afficher deux durées différentes de la même séance.
   const total = useMemo(
-    () => entries.reduce((sum, e) => sum + (entryDuration(e) ?? 0), 0),
+    () => entries.reduce((sum, e) => sum + entryEstimateSec(e), 0),
     [entries],
   );
 

@@ -27,6 +27,25 @@ export type Entry =
       betweenRounds: boolean;
     };
 
+/**
+ * Durée estimée d'une étape, y compris celles comptées en répétitions.
+ *
+ * À ne pas confondre avec la durée du chronomètre : un exercice en répétitions
+ * n'en a pas, c'est l'utilisateur qui décide quand il a fini. Mais pour annoncer
+ * la durée totale d'une séance, il faut bien compter ce temps-là — sinon le
+ * lecteur affiche une séance beaucoup plus courte que la page du programme,
+ * alors qu'il s'agit de la même séance.
+ */
+export function entryEstimateSec(entry: Entry): number {
+  if (entry.type === "rest") return entry.seconds;
+  return itemDurationSec({
+    exercise: entry.exercise.slug,
+    seconds: entry.seconds ?? undefined,
+    reps: entry.reps ?? undefined,
+    restSec: 0,
+  });
+}
+
 export function buildPlaylist(session: Session): Entry[] {
   const entries: Entry[] = [];
 
