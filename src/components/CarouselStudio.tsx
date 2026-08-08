@@ -67,6 +67,59 @@ const VISUELS = {
 
 type VisuelId = keyof typeof VISUELS;
 
+/**
+ * Prompts d'images de fond, à coller dans un générateur d'images.
+ *
+ * Trois contraintes reviennent dans chacun, et ce sont elles qui font la
+ * différence entre un joli fond et un fond utilisable : la scène doit être
+ * sombre et peu chargée en haut, où passe le titre ; son centre doit rester
+ * vide, où se pose le téléphone ; et elle ne doit contenir ni texte, ni
+ * personne, ni marque — un texte généré est toujours illisible, et un visage
+ * inventé pose des questions de droit à l'image dès qu'on fait de la publicité.
+ */
+const PROMPTS_FOND = [
+  {
+    label: "Salon au petit matin",
+    texte:
+      "Photographie réaliste d'un salon moderne vide au petit matin, parquet clair, grande fenêtre à gauche, lumière rasante chaude, tapis de sport déroulé au sol, ambiance très sombre et contrastée, dominante noire et dorée, partie haute de l'image presque noire et sans détail, centre dégagé, aucune personne, aucun texte, aucun logo, format vertical 9:16, rendu cinématographique.",
+  },
+  {
+    label: "Appartement parisien",
+    texte:
+      "Photographie réaliste d'un appartement haussmannien vide, parquet à chevrons, moulures, fin de journée, lumière dorée rasante qui traverse la pièce, ambiance sombre et feutrée, dominante noire et or, haut de l'image dans l'ombre, centre dégagé, aucune personne, aucun texte, format vertical 9:16.",
+  },
+  {
+    label: "Studio béton",
+    texte:
+      "Photographie réaliste d'un studio d'entraînement en béton brut, mur sombre texturé, un seul projecteur chaud rasant depuis la droite, poussière en suspension dans le faisceau, ambiance très sombre, dominante noire et dorée, haut de l'image quasi noir, centre vide, aucune personne, aucun texte, format vertical 9:16.",
+  },
+  {
+    label: "Chambre minimaliste",
+    texte:
+      "Photographie réaliste d'une chambre minimaliste vide, mur uni sombre, tapis de yoga posé au sol, lumière douce dorée venant d'une lampe basse, beaucoup d'ombre, dominante noire et or, haut de l'image sans détail, centre dégagé, aucune personne, aucun texte, format vertical 9:16.",
+  },
+  {
+    label: "Parc à l'aube",
+    texte:
+      "Photographie réaliste d'un sentier de parc désert à l'aube, brume légère, silhouettes d'arbres sombres, soleil bas qui perce entre les branches, ambiance sombre et dorée, haut de l'image assombri par le feuillage, centre dégagé, aucune personne, aucun texte, format vertical 9:16, rendu cinématographique.",
+  },
+  {
+    label: "Terrasse au coucher du soleil",
+    texte:
+      "Photographie réaliste d'une terrasse en bois vide au coucher du soleil, ville floue au loin, ciel orangé assombri, ambiance contrastée, dominante noire et dorée, partie haute de l'image sombre, centre dégagé, aucune personne, aucun texte, format vertical 9:16.",
+  },
+  {
+    label: "Texture abstraite",
+    texte:
+      "Fond abstrait sombre, texture de béton noir avec un halo doré diffus au centre-bas, grain fin, dégradé du noir profond vers l'or sourd, aucun objet reconnaissable, aucune personne, aucun texte, format vertical 9:16, rendu photographique haute définition.",
+  },
+  {
+    label: "Fumée et lumière",
+    texte:
+      "Fond noir profond traversé par une fumée dorée très diffuse venant du bas, éclairage latéral chaud, contraste élevé, ambiance dramatique et épurée, aucun objet, aucune personne, aucun texte, format vertical 9:16, rendu photographique.",
+  },
+] as const;
+
 /** Côté le plus long d'une photo de fond importée, en pixels. */
 const FOND_MAX = 1400;
 
@@ -365,6 +418,41 @@ export function CarouselStudio({
           )}
         </div>
         {fondErreur && <p className="mt-3 text-sm text-red-300">{fondErreur}</p>}
+
+        <details className="mt-5 rounded-2xl bg-white/5 p-5">
+          <summary className="cursor-pointer text-sm font-bold text-white">
+            Pas de photo sous la main ? Faites-la générer ({PROMPTS_FOND.length} descriptions
+            prêtes)
+          </summary>
+          <p className="mt-3 text-sm leading-relaxed text-white/55">
+            Copiez une description, collez-la dans un générateur d&apos;images (ChatGPT, Gemini,
+            Copilot…), puis importez le résultat ci-dessus. Chacune impose les trois contraintes qui
+            rendent un fond réellement utilisable : sombre et vide en haut où passe le titre, centre
+            dégagé où se pose le téléphone, et ni texte ni personne dans l&apos;image.
+          </p>
+          <ul className="mt-4 space-y-3">
+            {PROMPTS_FOND.map((prompt) => (
+              <li key={prompt.label} className="rounded-2xl bg-ink-950/50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-brand-200">{prompt.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => void navigator.clipboard.writeText(prompt.texte)}
+                    className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white transition hover:bg-white/20"
+                  >
+                    Copier
+                  </button>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-white/50">{prompt.texte}</p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs leading-relaxed text-white/40">
+            Pour un carrousel carré, remplacez « format vertical 9:16 » par « format carré 1:1 ».
+            Demandez la plus haute définition possible : l&apos;image sera réduite à 1400 px de côté
+            à l&apos;import.
+          </p>
+        </details>
       </div>
 
       {/* Choix manuel des exercices */}
