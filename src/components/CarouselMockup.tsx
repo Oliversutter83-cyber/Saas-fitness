@@ -68,33 +68,78 @@ export function Telephone({
           <rect x={0} y={0} width={largeur} height={hauteur} rx={rayon} />
         </clipPath>
         <linearGradient id={`chassis-${uid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#4a443e" />
-          <stop offset="45%" stopColor="#1e1b19" />
-          <stop offset="100%" stopColor="#4a443e" />
+          <stop offset="0%" stopColor="#6b635b" />
+          <stop offset="18%" stopColor="#2c2825" />
+          <stop offset="50%" stopColor="#15120f" />
+          <stop offset="82%" stopColor="#2c2825" />
+          <stop offset="100%" stopColor="#6b635b" />
         </linearGradient>
+        <radialGradient id={`halo-${uid}`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#ddb13c" stopOpacity={0.3} />
+          <stop offset="100%" stopColor="#ddb13c" stopOpacity={0} />
+        </radialGradient>
+        {/*
+          Le téléphone s'efface vers le bas au lieu de s'arrêter net. C'est ce
+          fondu qui fait la différence entre une capture collée sur un fond et un
+          objet posé dans la scène.
+        */}
+        <linearGradient id={`fondu-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="72%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#000000" />
+        </linearGradient>
+        <mask id={`masque-${uid}`}>
+          <rect
+            x={-bord * 3}
+            y={-bord * 3}
+            width={largeur + bord * 6}
+            height={hauteur + bord * 6}
+            fill={`url(#fondu-${uid})`}
+          />
+        </mask>
       </defs>
 
-      <rect
-        x={-bord}
-        y={-bord}
-        width={largeur + bord * 2}
-        height={hauteur + bord * 2}
-        rx={rayon + bord}
-        fill={`url(#chassis-${uid})`}
+      {/* Lueur derrière l'appareil : elle le détache du fond. */}
+      <ellipse
+        cx={largeur / 2}
+        cy={hauteur * 0.42}
+        rx={largeur * 1.05}
+        ry={hauteur * 0.42}
+        fill={`url(#halo-${uid})`}
       />
-      <rect x={0} y={0} width={largeur} height={hauteur} rx={rayon} fill="#0a0908" />
 
-      <g clipPath={`url(#ecran-${uid})`}>{children}</g>
+      <g mask={`url(#masque-${uid})`}>
+        <rect
+          x={-bord}
+          y={-bord}
+          width={largeur + bord * 2}
+          height={hauteur + bord * 2}
+          rx={rayon + bord}
+          fill={`url(#chassis-${uid})`}
+        />
+        <rect x={0} y={0} width={largeur} height={hauteur} rx={rayon} fill="#0a0908" />
 
-      {/* Îlot dynamique : c'est lui qui fait lire « téléphone » au premier coup d'œil. */}
-      <rect
-        x={largeur * 0.34}
-        y={largeur * 0.035}
-        width={largeur * 0.32}
-        height={largeur * 0.075}
-        rx={largeur * 0.038}
-        fill="#0a0908"
-      />
+        <g clipPath={`url(#ecran-${uid})`}>{children}</g>
+
+        {/* Îlot dynamique : c'est lui qui fait lire « téléphone » au premier coup d'œil. */}
+        <rect
+          x={largeur * 0.35}
+          y={largeur * 0.032}
+          width={largeur * 0.3}
+          height={largeur * 0.072}
+          rx={largeur * 0.036}
+          fill="#000000"
+        />
+        {/* Reflet en diagonale sur la vitre, très discret. */}
+        <path
+          d={`M 0 ${hauteur * 0.1} L ${largeur} ${hauteur * 0.02} L ${largeur} ${
+            hauteur * 0.12
+          } L 0 ${hauteur * 0.2} Z`}
+          fill="#ffffff"
+          opacity={0.03}
+          clipPath={`url(#ecran-${uid})`}
+        />
+      </g>
     </g>
   );
 }
@@ -124,16 +169,7 @@ export function EcranExercice({
     <g>
       <rect x={0} y={0} width={largeur} height={largeur * 2.05} fill={c.fond} />
 
-      {/* Barre d'état */}
-      <text x={9 * u} y={13 * u} fill={c.texte} fontFamily={font} fontSize={4.2 * u} fontWeight={700}>
-        9:41
-      </text>
-      <g fill={c.texte} opacity={0.9}>
-        <rect x={78 * u} y={9.6 * u} width={2 * u} height={3.4 * u} rx={0.5 * u} />
-        <rect x={81 * u} y={8.6 * u} width={2 * u} height={4.4 * u} rx={0.5 * u} />
-        <rect x={84 * u} y={7.6 * u} width={2 * u} height={5.4 * u} rx={0.5 * u} />
-        <rect x={88 * u} y={8.4 * u} width={7 * u} height={4.6 * u} rx={1.4 * u} />
-      </g>
+      <BarreEtat u={u} couleur={c.texte} font={font} />
 
       {/* En-tête du produit */}
       <rect x={9 * u} y={22 * u} width={7 * u} height={7 * u} rx={2 * u} fill={c.accent} />
@@ -255,6 +291,80 @@ export function EcranExercice({
       >
         Démarrer la séance
       </text>
+    </g>
+  );
+}
+
+/**
+ * La barre d'état du téléphone.
+ *
+ * Dessinée symbole par symbole, parce que c'est le détail qui décide si la
+ * maquette passe pour un vrai téléphone ou pour un dessin : quatre barres de
+ * réseau croissantes, les trois arcs du wifi avec son point, et une batterie
+ * avec son ergot. Trois rectangles approximatifs ne trompaient personne.
+ */
+function BarreEtat({ u, couleur, font }: { u: number; couleur: string; font: string }) {
+  /** Un arc de wifi : un demi-cercle ouvert vers le bas, centré sur le point. */
+  const arc = (r: number) =>
+    `M ${(84.6 - r * 0.7071) * u} ${(12.8 - r * 0.7071) * u} A ${r * u} ${r * u} 0 0 1 ${
+      (84.6 + r * 0.7071) * u
+    } ${(12.8 - r * 0.7071) * u}`;
+
+  return (
+    <g>
+      <text
+        x={9 * u}
+        y={13.4 * u}
+        fill={couleur}
+        fontFamily={font}
+        fontSize={4.4 * u}
+        fontWeight={700}
+        letterSpacing={-0.2 * u}
+      >
+        9:41
+      </text>
+
+      {/* Réseau : quatre barres croissantes */}
+      <g fill={couleur}>
+        {[1.8, 2.8, 3.8, 4.8].map((hauteur, i) => (
+          <rect
+            key={i}
+            x={(72 + i * 2.2) * u}
+            y={(13 - hauteur) * u}
+            width={1.5 * u}
+            height={hauteur * u}
+            rx={0.5 * u}
+          />
+        ))}
+      </g>
+
+      {/* Wifi : trois arcs et un point */}
+      <g stroke={couleur} strokeWidth={1.1 * u} fill="none" strokeLinecap="round">
+        <path d={arc(4.6)} />
+        <path d={arc(3)} />
+      </g>
+      <circle cx={84.6 * u} cy={12.4 * u} r={0.85 * u} fill={couleur} />
+
+      {/* Batterie : contour, charge et ergot */}
+      <rect
+        x={90 * u}
+        y={8.8 * u}
+        width={7.2 * u}
+        height={4.2 * u}
+        rx={1.3 * u}
+        fill="none"
+        stroke={couleur}
+        strokeWidth={0.6 * u}
+        opacity={0.45}
+      />
+      <rect x={90.8 * u} y={9.6 * u} width={4.6 * u} height={2.6 * u} rx={0.8 * u} fill={couleur} />
+      <path
+        d={`M ${98.1 * u} ${10.2 * u} A ${0.8 * u} ${0.8 * u} 0 0 1 ${98.1 * u} ${11.6 * u}`}
+        stroke={couleur}
+        strokeWidth={0.6 * u}
+        fill="none"
+        opacity={0.45}
+      />
     </g>
   );
 }

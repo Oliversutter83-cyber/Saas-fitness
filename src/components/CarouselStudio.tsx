@@ -217,6 +217,7 @@ export function CarouselStudio({
   const [visuel, setVisuel] = useState<VisuelId>("telephone");
   const [fond, setFond] = useState<string | null>(null);
   const [fondErreur, setFondErreur] = useState<string | null>(null);
+  const [promptCopie, setPromptCopie] = useState<string | null>(null);
   const [category, setCategory] = useState<Category | "">("");
   const [kicker, setKicker] = useState<string>(ACCROCHES[0].kicker);
   const [question, setQuestion] = useState<string>(ACCROCHES[0].question);
@@ -419,40 +420,45 @@ export function CarouselStudio({
         </div>
         {fondErreur && <p className="mt-3 text-sm text-red-300">{fondErreur}</p>}
 
-        <details className="mt-5 rounded-2xl bg-white/5 p-5">
-          <summary className="cursor-pointer text-sm font-bold text-white">
-            Pas de photo sous la main ? Faites-la générer ({PROMPTS_FOND.length} descriptions
-            prêtes)
-          </summary>
-          <p className="mt-3 text-sm leading-relaxed text-white/55">
-            Copiez une description, collez-la dans un générateur d&apos;images (ChatGPT, Gemini,
-            Copilot…), puis importez le résultat ci-dessus. Chacune impose les trois contraintes qui
-            rendent un fond réellement utilisable : sombre et vide en haut où passe le titre, centre
-            dégagé où se pose le téléphone, et ni texte ni personne dans l&apos;image.
+        <div className="mt-5 rounded-2xl bg-white/5 p-5">
+          <h3 className="text-sm font-extrabold text-white">
+            Pas de photo sous la main ? Faites-la générer
+          </h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-white/55">
+            Appuyez sur une ambiance : sa description part dans le presse-papier. Collez-la dans
+            ChatGPT, Gemini ou Copilot, puis importez l&apos;image obtenue avec le bouton ci-dessus.
           </p>
-          <ul className="mt-4 space-y-3">
+          <div className="mt-4 flex flex-wrap gap-2">
             {PROMPTS_FOND.map((prompt) => (
-              <li key={prompt.label} className="rounded-2xl bg-ink-950/50 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-bold text-brand-200">{prompt.label}</span>
-                  <button
-                    type="button"
-                    onClick={() => void navigator.clipboard.writeText(prompt.texte)}
-                    className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white transition hover:bg-white/20"
-                  >
-                    Copier
-                  </button>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-white/50">{prompt.texte}</p>
-              </li>
+              <button
+                key={prompt.label}
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(prompt.texte);
+                  setPromptCopie(prompt.label);
+                }}
+                className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+                  promptCopie === prompt.label
+                    ? "bg-brand-400/20 text-brand-200 ring-1 ring-brand-400/40"
+                    : "bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+              >
+                {promptCopie === prompt.label ? `✓ ${prompt.label}` : prompt.label}
+              </button>
             ))}
-          </ul>
+          </div>
+          {promptCopie && (
+            <p className="mt-3 text-sm font-semibold text-brand-200">
+              Description copiée. Collez-la dans votre générateur d&apos;images.
+            </p>
+          )}
           <p className="mt-4 text-xs leading-relaxed text-white/40">
-            Pour un carrousel carré, remplacez « format vertical 9:16 » par « format carré 1:1 ».
-            Demandez la plus haute définition possible : l&apos;image sera réduite à 1400 px de côté
-            à l&apos;import.
+            Chaque description impose les trois contraintes qui rendent un fond utilisable : sombre
+            et sans détail en haut où passe le titre, centre dégagé où se pose le téléphone, ni
+            texte ni personne dans l&apos;image. Pour un carrousel carré, remplacez « format
+            vertical 9:16 » par « format carré 1:1 » avant d&apos;envoyer.
           </p>
-        </details>
+        </div>
       </div>
 
       {/* Choix manuel des exercices */}
@@ -642,6 +648,10 @@ function DownloadAll({
           const nodes = svgs.current
             .slice(0, count)
             .filter((node): node is SVGSVGElement => Boolean(node));
+
+          // Sur téléphone, le partage envoie tout d'un coup vers Instagram.
+          if (await partagerSlides(nodes, FORMATS[format])) return;
+
           for (let i = 0; i < nodes.length; i++) {
             await downloadSvgAsPng(nodes[i], `slide-${i + 1}.png`, FORMATS[format]);
             // Les navigateurs ignorent des téléchargements déclenchés trop vite.
@@ -653,7 +663,7 @@ function DownloadAll({
       }}
       className="rounded-full bg-ink-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/20 disabled:opacity-60"
     >
-      {busy ? "Export en cours…" : "Télécharger toutes les slides"}
+      {busy ? "Préparation…" : "Récupérer les slides"}
     </button>
   );
 }
@@ -1278,12 +1288,12 @@ async function reduireImage(fichier: File): Promise<string> {
 
 // -------------------------------------------------------------------- export
 
-async function downloadSvgAsPng(
+/** Rastérise une slide et rend le PNG, sans le télécharger. */
+async function svgVersPng(
   svg: SVGSVGElement | null,
-  filename: string,
   size: { w: number; h: number },
-) {
-  if (!svg) return;
+): Promise<Blob | null> {
+  if (!svg) return null;
 
   const source = new XMLSerializer().serializeToString(svg);
   const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml;charset=utf-8" }));
@@ -1294,19 +1304,59 @@ async function downloadSvgAsPng(
     canvas.width = size.w;
     canvas.height = size.h;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return null;
     ctx.drawImage(image, 0, 0, size.w, size.h);
-
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-    if (!blob) return;
-
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(link.href), 2000);
+    return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
   } finally {
     URL.revokeObjectURL(url);
+  }
+}
+
+async function downloadSvgAsPng(
+  svg: SVGSVGElement | null,
+  filename: string,
+  size: { w: number; h: number },
+) {
+  const blob = await svgVersPng(svg, size);
+  if (!blob) return;
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 2000);
+}
+
+/**
+ * Envoie toutes les slides d'un coup vers le partage du téléphone.
+ *
+ * Sur mobile, enchaîner sept téléchargements ne fonctionne pas : le navigateur
+ * bloque tout après le premier, et l'utilisateur croit que le bouton est cassé.
+ * Le partage natif règle le problème et raccourcit le trajet — les images
+ * partent directement vers Instagram sans passer par la galerie.
+ *
+ * Rend false quand le partage de fichiers n'est pas disponible, pour laisser
+ * l'appelant retomber sur des téléchargements classiques.
+ */
+async function partagerSlides(
+  svgs: (SVGSVGElement | null)[],
+  size: { w: number; h: number },
+): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.canShare) return false;
+
+  const fichiers: File[] = [];
+  for (let i = 0; i < svgs.length; i++) {
+    const blob = await svgVersPng(svgs[i], size);
+    if (blob) fichiers.push(new File([blob], `slide-${i + 1}.png`, { type: "image/png" }));
+  }
+  if (fichiers.length === 0 || !navigator.canShare({ files: fichiers })) return false;
+
+  try {
+    await navigator.share({ files: fichiers, title: "Carrousel ATLAS" });
+    return true;
+  } catch {
+    // L'utilisateur a fermé la feuille de partage : rien à signaler.
+    return true;
   }
 }
 
