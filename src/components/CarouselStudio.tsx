@@ -4,7 +4,12 @@ import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { EcranExercice, Telephone } from "@/components/CarouselMockup";
 import { FigureBody } from "@/components/Figure";
 import { TRIAL_DAYS } from "@/config";
-import { CATEGORIES, keyPoseOf, type Category, type Exercise } from "@/content/exercises";
+import {
+  CATEGORIES,
+  keyPoseOf,
+  type Category,
+  type Exercise,
+} from "@/content/exercises";
 
 /**
  * Fabrique de carrousels pour Instagram et TikTok.
@@ -124,8 +129,20 @@ const PROMPTS_FOND = [
 const FOND_MAX = 1400;
 
 type Slide =
-  | { kind: "hook"; kicker: string; question: string; reponse: string; exemple?: Exercise }
-  | { kind: "exercise"; index: number; total: number; exercise: Exercise; caption: string }
+  | {
+      kind: "hook";
+      kicker: string;
+      question: string;
+      reponse: string;
+      exemple?: Exercise;
+    }
+  | {
+      kind: "exercise";
+      index: number;
+      total: number;
+      exercise: Exercise;
+      caption: string;
+    }
   | { kind: "cta"; title: string; subtitle: string };
 
 /**
@@ -223,11 +240,14 @@ export function CarouselStudio({
   const [question, setQuestion] = useState<string>(ACCROCHES[0].question);
   const [reponse, setReponse] = useState<string>(ACCROCHES[0].reponse);
   const [ctaTitle, setCtaTitle] = useState("Le programme complet est en bio");
-  const [ctaSubtitle, setCtaSubtitle] = useState(`4 semaines · ${TRIAL_DAYS} jours d'essai`);
+  const [ctaSubtitle, setCtaSubtitle] = useState(
+    `4 semaines · ${TRIAL_DAYS} jours d'essai`,
+  );
   const [count, setCount] = useState(5);
 
   const pool = useMemo(
-    () => (category ? exercises.filter((e) => e.category === category) : exercises),
+    () =>
+      category ? exercises.filter((e) => e.category === category) : exercises,
     [exercises, category],
   );
 
@@ -279,7 +299,10 @@ export function CarouselStudio({
           label="Format"
           value={format}
           onChange={(v) => setFormat(v as FormatId)}
-          options={Object.entries(FORMATS).map(([id, f]) => ({ value: id, label: f.label }))}
+          options={Object.entries(FORMATS).map(([id, f]) => ({
+            value: id,
+            label: f.label,
+          }))}
         />
         <Select
           label="Thème"
@@ -295,7 +318,10 @@ export function CarouselStudio({
           label="Style des visuels"
           value={visuel}
           onChange={(v) => setVisuel(v as VisuelId)}
-          options={Object.entries(VISUELS).map(([id, label]) => ({ value: id, label }))}
+          options={Object.entries(VISUELS).map(([id, label]) => ({
+            value: id,
+            label,
+          }))}
         />
         <Select
           label="Catégorie d'exercices"
@@ -330,19 +356,37 @@ export function CarouselStudio({
         </label>
 
         <Text label="Étiquette (slide 1)" value={kicker} onChange={setKicker} />
-        <Text label="La question qui accroche" value={question} onChange={setQuestion} />
-        <Text label="La réponse, juste en dessous" value={reponse} onChange={setReponse} />
-        <Text label="Appel à l'action (dernière slide)" value={ctaTitle} onChange={setCtaTitle} />
-        <Text label="Sous-titre de l'appel à l'action" value={ctaSubtitle} onChange={setCtaSubtitle} />
+        <Text
+          label="La question qui accroche"
+          value={question}
+          onChange={setQuestion}
+        />
+        <Text
+          label="La réponse, juste en dessous"
+          value={reponse}
+          onChange={setReponse}
+        />
+        <Text
+          label="Appel à l'action (dernière slide)"
+          value={ctaTitle}
+          onChange={setCtaTitle}
+        />
+        <Text
+          label="Sous-titre de l'appel à l'action"
+          value={ctaSubtitle}
+          onChange={setCtaSubtitle}
+        />
       </div>
 
       {/* Accroches prêtes à l'emploi */}
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-        <h2 className="font-extrabold text-white">Accroches prêtes à publier</h2>
+        <h2 className="font-extrabold text-white">
+          Accroches prêtes à publier
+        </h2>
         <p className="mt-1 text-sm leading-relaxed text-white/55">
-          La première slide décide seule si quelqu&apos;un fait glisser ou passe son chemin. Chacune
-          nomme un obstacle, puis le lève en une phrase. Vous pouvez les retoucher ensuite dans les
-          champs ci-dessus.
+          La première slide décide seule si quelqu&apos;un fait glisser ou passe
+          son chemin. Chacune nomme un obstacle, puis le lève en une phrase.
+          Vous pouvez les retoucher ensuite dans les champs ci-dessus.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {ACCROCHES.map((a) => {
@@ -371,16 +415,20 @@ export function CarouselStudio({
 
       {/* Photo de fond */}
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-        <h2 className="font-extrabold text-white">Photo de fond (facultatif)</h2>
+        <h2 className="font-extrabold text-white">
+          Photo de fond (facultatif)
+        </h2>
         <p className="mt-1 text-sm leading-relaxed text-white/55">
-          Sans photo, les slides utilisent un dégradé noir et or. Avec une photo — un salon, un
-          tapis, un parc — elles prennent l&apos;allure d&apos;une vraie campagne. Un voile sombre
-          est posé par-dessus pour que le texte reste lisible.
+          Sans photo, les slides utilisent un dégradé noir et or. Avec une photo
+          — un salon, un tapis, un parc — elles prennent l&apos;allure
+          d&apos;une vraie campagne. Un voile sombre est posé par-dessus pour
+          que le texte reste lisible.
         </p>
         <p className="mt-2 text-xs leading-relaxed text-white/40">
-          N&apos;utilisez que des photos dont vous avez le droit : les vôtres, ou des banques
-          d&apos;images libres comme Unsplash ou Pexels. Une photo prise au hasard sur internet
-          expose à une réclamation du photographe.
+          N&apos;utilisez que des photos dont vous avez le droit : les vôtres,
+          ou des banques d&apos;images libres comme Unsplash ou Pexels. Une
+          photo prise au hasard sur internet expose à une réclamation du
+          photographe.
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -395,7 +443,9 @@ export function CarouselStudio({
                 setFond(await reduireImage(fichier));
               } catch {
                 setFond(null);
-                setFondErreur("Cette image n'a pas pu être lue. Essayez-en une autre.");
+                setFondErreur(
+                  "Cette image n'a pas pu être lue. Essayez-en une autre.",
+                );
               }
             }}
             className="block w-full max-w-xs text-sm text-white/60 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-white/15"
@@ -418,15 +468,18 @@ export function CarouselStudio({
             </div>
           )}
         </div>
-        {fondErreur && <p className="mt-3 text-sm text-red-300">{fondErreur}</p>}
+        {fondErreur && (
+          <p className="mt-3 text-sm text-red-300">{fondErreur}</p>
+        )}
 
         <div className="mt-5 rounded-2xl bg-white/5 p-5">
           <h3 className="text-sm font-extrabold text-white">
             Pas de photo sous la main ? Faites-la générer
           </h3>
           <p className="mt-1.5 text-sm leading-relaxed text-white/55">
-            Appuyez sur une ambiance : sa description part dans le presse-papier. Collez-la dans
-            ChatGPT, Gemini ou Copilot, puis importez l&apos;image obtenue avec le bouton ci-dessus.
+            Appuyez sur une ambiance : sa description part dans le
+            presse-papier. Collez-la dans ChatGPT, Gemini ou Copilot, puis
+            importez l&apos;image obtenue avec le bouton ci-dessus.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             {PROMPTS_FOND.map((prompt) => (
@@ -443,7 +496,9 @@ export function CarouselStudio({
                     : "bg-white/5 text-white/70 hover:bg-white/10"
                 }`}
               >
-                {promptCopie === prompt.label ? `✓ ${prompt.label}` : prompt.label}
+                {promptCopie === prompt.label
+                  ? `✓ ${prompt.label}`
+                  : prompt.label}
               </button>
             ))}
           </div>
@@ -453,10 +508,11 @@ export function CarouselStudio({
             </p>
           )}
           <p className="mt-4 text-xs leading-relaxed text-white/40">
-            Chaque description impose les trois contraintes qui rendent un fond utilisable : sombre
-            et sans détail en haut où passe le titre, centre dégagé où se pose le téléphone, ni
-            texte ni personne dans l&apos;image. Pour un carrousel carré, remplacez « format
-            vertical 9:16 » par « format carré 1:1 » avant d&apos;envoyer.
+            Chaque description impose les trois contraintes qui rendent un fond
+            utilisable : sombre et sans détail en haut où passe le titre, centre
+            dégagé où se pose le téléphone, ni texte ni personne dans
+            l&apos;image. Pour un carrousel carré, remplacez « format vertical
+            9:16 » par « format carré 1:1 » avant d&apos;envoyer.
           </p>
         </div>
       </div>
@@ -475,11 +531,15 @@ export function CarouselStudio({
                 type="button"
                 onClick={() =>
                   setPicked((current) =>
-                    on ? current.filter((s) => s !== exercise.slug) : [...current, exercise.slug],
+                    on
+                      ? current.filter((s) => s !== exercise.slug)
+                      : [...current, exercise.slug],
                   )
                 }
                 className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
-                  on ? "bg-white/10 text-white" : "bg-white/5 text-white/70 hover:bg-white/10"
+                  on
+                    ? "bg-white/10 text-white"
+                    : "bg-white/5 text-white/70 hover:bg-white/10"
                 }`}
               >
                 {exercise.name}
@@ -536,7 +596,9 @@ export function CarouselStudio({
 
       {/* Légende prête à coller */}
       <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-        <h2 className="font-extrabold text-white">Légende à coller sous la publication</h2>
+        <h2 className="font-extrabold text-white">
+          Légende à coller sous la publication
+        </h2>
         <textarea
           readOnly
           value={caption}
@@ -603,14 +665,20 @@ function SlideCard({
         className="w-full rounded-xl"
       />
       <figcaption className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-xs font-bold text-white/55">Slide {position}</span>
+        <span className="text-xs font-bold text-white/55">
+          Slide {position}
+        </span>
         <button
           type="button"
           disabled={busy}
           onClick={async () => {
             setBusy(true);
             try {
-              await downloadSvgAsPng(ref.current, `slide-${position}.png`, FORMATS[format]);
+              await downloadSvgAsPng(
+                ref.current,
+                `slide-${position}.png`,
+                FORMATS[format],
+              );
             } finally {
               setBusy(false);
             }
@@ -653,7 +721,11 @@ function DownloadAll({
           if (await partagerSlides(nodes, FORMATS[format])) return;
 
           for (let i = 0; i < nodes.length; i++) {
-            await downloadSvgAsPng(nodes[i], `slide-${i + 1}.png`, FORMATS[format]);
+            await downloadSvgAsPng(
+              nodes[i],
+              `slide-${i + 1}.png`,
+              FORMATS[format],
+            );
             // Les navigateurs ignorent des téléchargements déclenchés trop vite.
             await new Promise((resolve) => setTimeout(resolve, 350));
           }
@@ -705,11 +777,39 @@ function Fond({
           <stop offset="0%" stopColor={c.accent} stopOpacity={0.22} />
           <stop offset="100%" stopColor={c.accent} stopOpacity={0} />
         </radialGradient>
+        {/*
+          Le voile est volontairement lourd en haut : c'est là que passe le
+          titre blanc, et les photos d'ambiance (fenêtre, ciel, coucher de
+          soleil) y sont justement les plus lumineuses. Un voile timide laissait
+          le titre se noyer dans la lumière.
+        */}
         <linearGradient id={`voile-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0a0908" stopOpacity={0.82} />
-          <stop offset="45%" stopColor="#0a0908" stopOpacity={0.55} />
-          <stop offset="100%" stopColor="#0a0908" stopOpacity={0.85} />
+          <stop offset="0%" stopColor="#0a0908" stopOpacity={0.93} />
+          <stop offset="30%" stopColor="#0a0908" stopOpacity={0.86} />
+          <stop offset="60%" stopColor="#0a0908" stopOpacity={0.6} />
+          <stop offset="100%" stopColor="#0a0908" stopOpacity={0.9} />
         </linearGradient>
+        {/*
+          Le voile seul ne suffit pas contre un reflet vif isolé. Une ombre
+          portée sous le texte décolle les lettres du fond quelle que soit la
+          photo. `feDropShadow` est du SVG pur : il survit à la conversion en
+          PNG, contrairement à une ombre CSS.
+        */}
+        <filter
+          id={`ombre-${uid}`}
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%"
+        >
+          <feDropShadow
+            dx="0"
+            dy="0"
+            stdDeviation={w * 0.014}
+            floodColor="#000000"
+            floodOpacity="0.85"
+          />
+        </filter>
       </defs>
 
       {image ? (
@@ -727,7 +827,13 @@ function Fond({
       ) : (
         <>
           <rect width={w} height={h} fill={`url(#degrade-${uid})`} />
-          <ellipse cx={w * 0.5} cy={h * 0.58} rx={w * 0.75} ry={h * 0.4} fill={`url(#lueur-${uid})`} />
+          <ellipse
+            cx={w * 0.5}
+            cy={h * 0.58}
+            rx={w * 0.75}
+            ry={h * 0.4}
+            fill={`url(#lueur-${uid})`}
+          />
         </>
       )}
     </>
@@ -764,6 +870,9 @@ function SlideSvg({
   // Police système : le SVG exporté est rastérisé hors de la page et n'a donc
   // pas accès aux polices chargées par le site.
   const font = "Helvetica Neue, Helvetica, Arial, sans-serif";
+  // Sur le dégradé maison, le contraste est déjà maîtrisé : l'ombre ne sert
+  // qu'à décoller le texte d'une photo.
+  const ombre = fond ? `url(#ombre-${uid})` : undefined;
 
   return (
     <svg
@@ -791,6 +900,7 @@ function SlideSvg({
             weight: 700,
             font,
             lineHeight: 1.2,
+            letterSpacing: 3,
           });
           const q = ajuster(slide.question.toUpperCase(), {
             largeurMax: largeur,
@@ -811,17 +921,33 @@ function SlideSvg({
             lineHeight: 1.25,
           });
 
-          const avecTelephone = visuel === "telephone" && Boolean(slide.exemple);
+          const avecTelephone =
+            visuel === "telephone" && Boolean(slide.exemple);
           const ecartEtiquette = Math.round(w * 0.05);
           const ecartReponse = Math.round(w * 0.06);
-          const total = etiquette.hauteur + ecartEtiquette + q.hauteur + ecartReponse + r.hauteur;
+          const total =
+            etiquette.hauteur +
+            ecartEtiquette +
+            q.hauteur +
+            ecartReponse +
+            r.hauteur;
           // Avec le téléphone, le texte remonte pour lui laisser la place ;
-          // sans lui, il se centre dans la slide.
-          const hautDuBloc = avecTelephone ? h * 0.08 : h * 0.5 - total / 2;
+          // sans lui, il se centre dans la slide. Dans les deux cas il reste
+          // au-dessus de la ligne de pied : une accroche longue descendait
+          // jusque sur le pseudo.
+          const basLibre = h - 160;
+          const hautDuBloc = Math.max(
+            marge,
+            Math.min(
+              avecTelephone ? h * 0.08 : h * 0.5 - total / 2,
+              basLibre - total,
+            ),
+          );
 
           const yEtiquette = hautDuBloc + etiquette.size;
           const yQuestion = yEtiquette + ecartEtiquette + q.size;
-          const yReponse = yQuestion + (q.hauteur - q.size) + ecartReponse + r.size;
+          const yReponse =
+            yQuestion + (q.hauteur - q.size) + ecartReponse + r.size;
 
           return (
             <>
@@ -834,6 +960,7 @@ function SlideSvg({
                 font={font}
                 weight={700}
                 letterSpacing={3}
+                ombre={ombre}
               />
               <BlocTexte
                 bloc={q}
@@ -843,6 +970,7 @@ function SlideSvg({
                 fill={c.text}
                 font={font}
                 weight={800}
+                ombre={ombre}
               />
               <rect
                 x={marge}
@@ -860,6 +988,7 @@ function SlideSvg({
                 fill={c.accent}
                 font={font}
                 weight={700}
+                ombre={ombre}
               />
               {avecTelephone && slide.exemple && (
                 <Telephone
@@ -879,16 +1008,17 @@ function SlideSvg({
                 </Telephone>
               )}
               {!avecTelephone && (
-                <text
+                <LigneAjustee
+                  texte={`${handle} · glisse →`}
                   x={marge}
                   y={h - 80}
+                  size={Math.round(w * 0.03)}
+                  largeurMax={w - marge * 2}
                   fill={c.muted}
-                  fontFamily={font}
-                  fontSize={Math.round(w * 0.03)}
-                  fontWeight={700}
-                >
-                  {handle} · glisse →
-                </text>
+                  font={font}
+                  weight={700}
+                  ombre={ombre}
+                />
               )}
             </>
           );
@@ -921,7 +1051,11 @@ function SlideSvg({
             });
             const largeurTel = Math.round(w * 0.54);
             const yTitre = Math.round(h * 0.1) + titre.size;
-            const ySous = yTitre + (titre.hauteur - titre.size) + Math.round(w * 0.035) + sous.size;
+            const ySous =
+              yTitre +
+              (titre.hauteur - titre.size) +
+              Math.round(w * 0.035) +
+              sous.size;
             const yTel = ySous + Math.round(w * 0.06);
 
             return (
@@ -945,6 +1079,7 @@ function SlideSvg({
                   fill={c.text}
                   font={font}
                   weight={800}
+                  ombre={ombre}
                 />
                 <BlocTexte
                   bloc={sous}
@@ -954,9 +1089,19 @@ function SlideSvg({
                   fill={c.accent}
                   font={font}
                   weight={600}
+                  ombre={ombre}
                 />
-                <Telephone x={(w - largeurTel) / 2} y={yTel} largeur={largeurTel} uid={uid}>
-                  <EcranExercice largeur={largeurTel} exercise={slide.exercise} font={font} />
+                <Telephone
+                  x={(w - largeurTel) / 2}
+                  y={yTel}
+                  largeur={largeurTel}
+                  uid={uid}
+                >
+                  <EcranExercice
+                    largeur={largeurTel}
+                    exercise={slide.exercise}
+                    font={font}
+                  />
                 </Telephone>
               </>
             );
@@ -990,9 +1135,17 @@ function SlideSvg({
               fill={c.text}
               font={font}
               weight={800}
+              ombre={ombre}
             />
 
-            <rect x={80} y={h * 0.34} width={w - 160} height={h * 0.34} rx={40} fill={c.card} />
+            <rect
+              x={80}
+              y={h * 0.34}
+              width={w - 160}
+              height={h * 0.34}
+              rx={40}
+              fill={c.card}
+            />
             <svg
               x={(w - h * 0.3) / 2}
               y={h * 0.36}
@@ -1026,17 +1179,19 @@ function SlideSvg({
               fill={c.muted}
               font={font}
               weight={600}
+              ombre={ombre}
             />
-            <text
+            <LigneAjustee
+              texte={slide.exercise.muscles.join(" · ")}
               x={80}
               y={h - 80}
+              size={Math.round(w * 0.028)}
+              largeurMax={w - 160}
               fill={c.muted}
-              fontFamily={font}
-              fontSize={Math.round(w * 0.028)}
-              fontWeight={700}
-            >
-              {slide.exercise.muscles.join(" · ")}
-            </text>
+              font={font}
+              weight={700}
+              ombre={ombre}
+            />
           </>
         ))}
 
@@ -1067,11 +1222,13 @@ function SlideSvg({
 
           const hauteurBouton = Math.round(w * 0.11);
           const ecart = Math.round(w * 0.05);
-          const total = titre.hauteur + ecart + sous.hauteur + ecart + hauteurBouton;
+          const total =
+            titre.hauteur + ecart + sous.hauteur + ecart + hauteurBouton;
           const haut = h * 0.5 - total / 2;
 
           const yTitre = haut + titre.size;
-          const ySous = yTitre + (titre.hauteur - titre.size) + ecart + sous.size;
+          const ySous =
+            yTitre + (titre.hauteur - titre.size) + ecart + sous.size;
           const yBouton = ySous + (sous.hauteur - sous.size) + ecart;
 
           return (
@@ -1084,6 +1241,7 @@ function SlideSvg({
                 fill={c.text}
                 font={font}
                 weight={800}
+                ombre={ombre}
               />
               <BlocTexte
                 bloc={sous}
@@ -1093,6 +1251,7 @@ function SlideSvg({
                 fill={c.accent}
                 font={font}
                 weight={700}
+                ombre={ombre}
               />
               <rect
                 x={marge}
@@ -1113,16 +1272,17 @@ function SlideSvg({
               >
                 LIEN EN BIO
               </text>
-              <text
+              <LigneAjustee
+                texte={`${siteName} · ${handle}`}
                 x={marge}
                 y={h - 80}
+                size={Math.round(w * 0.03)}
+                largeurMax={largeur}
                 fill={c.muted}
-                fontFamily={font}
-                fontSize={Math.round(w * 0.03)}
-                fontWeight={700}
-              >
-                {siteName} · {handle}
-              </text>
+                font={font}
+                weight={700}
+                ombre={ombre}
+              />
             </>
           );
         })()}
@@ -1139,23 +1299,116 @@ function SlideSvg({
 
 let mesureur: CanvasRenderingContext2D | null | undefined;
 
-function largeurTexte(texte: string, size: number, weight: number, font: string): number {
+/**
+ * Largeur réelle d'une ligne, interlettrage compris.
+ *
+ * `measureText` ignore le `letter-spacing` appliqué en SVG : sur une étiquette
+ * espacée de 3 px, vingt caractères ajoutent soixante pixels que la mesure ne
+ * voyait pas. C'est exactement le genre d'écart qui fait sortir un mot du cadre.
+ */
+function largeurTexte(
+  texte: string,
+  size: number,
+  weight: number,
+  font: string,
+  letterSpacing = 0,
+): number {
+  const espacement = letterSpacing * texte.length;
   if (mesureur === undefined) {
     mesureur = document.createElement("canvas").getContext("2d");
   }
   if (!mesureur) {
     // Approximation de secours si le canvas est indisponible.
-    return texte.length * size * 0.58;
+    return texte.length * size * 0.58 + espacement;
   }
   mesureur.font = `${weight} ${size}px ${font}`;
-  return mesureur.measureText(texte).width;
+  return mesureur.measureText(texte).width + espacement;
 }
 
 type Bloc = { lignes: string[]; size: number; hauteur: number };
 
+type Mesure = {
+  largeurMax: number;
+  weight: number;
+  font: string;
+  letterSpacing: number;
+};
+
+/**
+ * Découpe le texte en lignes à une taille donnée.
+ *
+ * Renvoie `null` si un mot seul est plus large que le cadre : à cette taille,
+ * ce mot sortirait de la slide, et aucune découpe ne peut le rattraper.
+ */
+function decouper(mots: string[], size: number, m: Mesure): string[] | null {
+  const lignes: string[] = [];
+  let courante = "";
+  for (const mot of mots) {
+    if (
+      largeurTexte(mot, size, m.weight, m.font, m.letterSpacing) > m.largeurMax
+    )
+      return null;
+    const essai = courante ? `${courante} ${mot}` : mot;
+    if (
+      largeurTexte(essai, size, m.weight, m.font, m.letterSpacing) <=
+      m.largeurMax
+    ) {
+      courante = essai;
+      continue;
+    }
+    lignes.push(courante);
+    courante = mot;
+  }
+  if (courante) lignes.push(courante);
+  return lignes;
+}
+
+/** Coupe un mot plus large que le cadre, sans jamais dépasser le bord. */
+function couperMot(mot: string, size: number, m: Mesure): string[] {
+  const morceaux: string[] = [];
+  let courant = "";
+  for (const lettre of mot) {
+    if (
+      courant &&
+      largeurTexte(courant + lettre, size, m.weight, m.font, m.letterSpacing) >
+        m.largeurMax
+    ) {
+      morceaux.push(courant);
+      courant = "";
+    }
+    courant += lettre;
+  }
+  if (courant) morceaux.push(courant);
+  return morceaux;
+}
+
+/** Raccourcit une ligne avec des points de suspension pour tenir dans le cadre. */
+function tronquer(ligne: string, size: number, m: Mesure): string {
+  if (
+    largeurTexte(ligne, size, m.weight, m.font, m.letterSpacing) <= m.largeurMax
+  )
+    return ligne;
+  let court = ligne;
+  while (
+    court.length > 1 &&
+    largeurTexte(`${court}…`, size, m.weight, m.font, m.letterSpacing) >
+      m.largeurMax
+  ) {
+    court = court.slice(0, -1);
+  }
+  return `${court.trimEnd()}…`;
+}
+
 /**
  * Découpe un texte pour qu'il tienne dans une largeur et un nombre de lignes
  * donnés, en réduisant la taille de police si nécessaire.
+ *
+ * Le contrat est absolu : ce que renvoie cette fonction tient dans le cadre,
+ * quoi qu'on lui donne. L'exploitant tape ses propres accroches dans le studio,
+ * et une phrase un peu longue ou un mot à rallonge sortait de la slide — un
+ * carrousel publié avec du texte coupé au bord, c'est un carrousel perdu. On
+ * accepte donc, dans l'ordre : de descendre sous la taille minimale souhaitée,
+ * de couper un mot interminable, puis de tronquer. Jamais de déborder.
  */
 function ajuster(
   texte: string,
@@ -1167,6 +1420,7 @@ function ajuster(
     weight,
     font,
     lineHeight,
+    letterSpacing = 0,
   }: {
     largeurMax: number;
     lignesMax: number;
@@ -1175,54 +1429,110 @@ function ajuster(
     weight: number;
     font: string;
     lineHeight: number;
+    letterSpacing?: number;
   },
 ): Bloc {
+  const m: Mesure = { largeurMax, weight, font, letterSpacing };
   const mots = texte.split(/\s+/).filter(Boolean);
+  const bloc = (lignes: string[], size: number): Bloc => ({
+    lignes,
+    size,
+    hauteur: (Math.max(1, lignes.length) - 1) * size * lineHeight + size,
+  });
+  if (mots.length === 0) return { lignes: [], size: sizeMin, hauteur: 0 };
+
+  // 1. La plage de tailles prévue par la maquette.
   const pas = Math.max(1, Math.round(sizeMax * 0.04));
-
   for (let size = sizeMax; size >= sizeMin; size -= pas) {
-    const lignes: string[] = [];
-    let courante = "";
-    let motTropLarge = false;
-
-    for (const mot of mots) {
-      const essai = courante ? `${courante} ${mot}` : mot;
-      if (largeurTexte(essai, size, weight, font) <= largeurMax) {
-        courante = essai;
-        continue;
-      }
-      if (courante) lignes.push(courante);
-      courante = mot;
-      if (largeurTexte(mot, size, weight, font) > largeurMax) {
-        motTropLarge = true;
-        break;
-      }
-    }
-    if (motTropLarge) continue;
-    if (courante) lignes.push(courante);
-
-    if (lignes.length <= lignesMax) {
-      return { lignes, size, hauteur: (lignes.length - 1) * size * lineHeight + size };
-    }
+    const lignes = decouper(mots, size, m);
+    if (lignes && lignes.length <= lignesMax) return bloc(lignes, size);
   }
 
-  // Aucune taille ne convient : on rend au minimum plutôt que de ne rien rendre.
+  // 2. Texte plus long que prévu : on descend sous le minimum souhaité. Le
+  //    texte devient petit, mais il reste entier et dans le cadre.
+  const plancher = Math.max(14, Math.round(sizeMin * 0.55));
+  for (let size = sizeMin - 1; size >= plancher; size -= 1) {
+    const lignes = decouper(mots, size, m);
+    if (lignes && lignes.length <= lignesMax) return bloc(lignes, size);
+  }
+
+  // 3. Dernier recours : un mot seul reste trop large (un lien collé, un
+  //    nom à rallonge) ou le texte réclame trop de lignes. On coupe.
   const lignes: string[] = [];
   let courante = "";
   for (const mot of mots) {
-    const essai = courante ? `${courante} ${mot}` : mot;
-    if (largeurTexte(essai, sizeMin, weight, font) <= largeurMax) courante = essai;
-    else {
-      if (courante) lignes.push(courante);
-      courante = mot;
+    const morceaux =
+      largeurTexte(mot, plancher, weight, font, letterSpacing) > largeurMax
+        ? couperMot(mot, plancher, m)
+        : [mot];
+    for (const morceau of morceaux) {
+      const essai = courante ? `${courante} ${morceau}` : morceau;
+      if (
+        largeurTexte(essai, plancher, weight, font, letterSpacing) <= largeurMax
+      ) {
+        courante = essai;
+      } else {
+        if (courante) lignes.push(courante);
+        courante = morceau;
+      }
     }
   }
   if (courante) lignes.push(courante);
-  return {
-    lignes,
-    size: sizeMin,
-    hauteur: (lignes.length - 1) * sizeMin * lineHeight + sizeMin,
-  };
+  if (lignes.length > lignesMax) {
+    lignes.length = lignesMax;
+    lignes[lignesMax - 1] = tronquer(`${lignes[lignesMax - 1]}…`, plancher, m);
+  }
+  return bloc(lignes, plancher);
+}
+
+/**
+ * Une ligne unique, garantie dans le cadre.
+ *
+ * Le pseudo, le nom du site et la liste des muscles varient : dessinés en
+ * `<text>` brut à taille fixe, ils dépassaient le bord dès qu'ils s'allongeaient.
+ */
+function LigneAjustee({
+  texte,
+  x,
+  y,
+  size,
+  largeurMax,
+  fill,
+  font,
+  weight,
+  ombre,
+}: {
+  texte: string;
+  x: number;
+  y: number;
+  size: number;
+  largeurMax: number;
+  fill: string;
+  font: string;
+  weight: number;
+  ombre?: string;
+}) {
+  const bloc = ajuster(texte, {
+    largeurMax,
+    lignesMax: 1,
+    sizeMax: size,
+    sizeMin: Math.round(size * 0.78),
+    weight,
+    font,
+    lineHeight: 1,
+  });
+  return (
+    <BlocTexte
+      bloc={bloc}
+      x={x}
+      y={y}
+      lineHeight={1}
+      fill={fill}
+      font={font}
+      weight={weight}
+      ombre={ombre}
+    />
+  );
 }
 
 /** Empile les lignes d'un bloc déjà ajusté, première ligne à `y`. */
@@ -1235,6 +1545,7 @@ function BlocTexte({
   font,
   weight,
   letterSpacing,
+  ombre,
 }: {
   bloc: Bloc;
   x: number;
@@ -1244,6 +1555,8 @@ function BlocTexte({
   font: string;
   weight: number;
   letterSpacing?: number;
+  /** Référence de filtre, posée quand le fond est une photo. */
+  ombre?: string;
 }) {
   return (
     <text
@@ -1254,6 +1567,7 @@ function BlocTexte({
       fontSize={bloc.size}
       fontWeight={weight}
       letterSpacing={letterSpacing}
+      filter={ombre}
     >
       {bloc.lignes.map((ligne, i) => (
         <tspan key={i} x={x} dy={i === 0 ? 0 : bloc.size * lineHeight}>
@@ -1296,7 +1610,9 @@ async function svgVersPng(
   if (!svg) return null;
 
   const source = new XMLSerializer().serializeToString(svg);
-  const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml;charset=utf-8" }));
+  const url = URL.createObjectURL(
+    new Blob([source], { type: "image/svg+xml;charset=utf-8" }),
+  );
 
   try {
     const image = await loadImage(url);
@@ -1306,7 +1622,9 @@ async function svgVersPng(
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.drawImage(image, 0, 0, size.w, size.h);
-    return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    return await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png"),
+    );
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -1347,9 +1665,13 @@ async function partagerSlides(
   const fichiers: File[] = [];
   for (let i = 0; i < svgs.length; i++) {
     const blob = await svgVersPng(svgs[i], size);
-    if (blob) fichiers.push(new File([blob], `slide-${i + 1}.png`, { type: "image/png" }));
+    if (blob)
+      fichiers.push(
+        new File([blob], `slide-${i + 1}.png`, { type: "image/png" }),
+      );
   }
-  if (fichiers.length === 0 || !navigator.canShare({ files: fichiers })) return false;
+  if (fichiers.length === 0 || !navigator.canShare({ files: fichiers }))
+    return false;
 
   try {
     await navigator.share({ files: fichiers, title: "Carrousel ATLAS" });
@@ -1377,7 +1699,9 @@ function buildCaption(
   exercises: Exercise[],
   handle: string,
 ): string {
-  const list = exercises.map((e, i) => `${i + 1}. ${e.name} — ${e.cues[0] ?? ""}`).join("\n");
+  const list = exercises
+    .map((e, i) => `${i + 1}. ${e.name} — ${e.cues[0] ?? ""}`)
+    .join("\n");
   const tags = [
     "#fitnessmaison",
     "#sportalamaison",
