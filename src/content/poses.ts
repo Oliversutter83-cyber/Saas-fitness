@@ -1027,24 +1027,28 @@ const poses = {
   },
 
   // ------------------------------------------------------- cardio : variantes
+  // Le bras qui frappe doit atteindre sa longueur complète, environ 53 : dessiné
+  // plus court tendu que relâché, il se lisait comme un bras à demi levé et le
+  // direct ne se voyait pas. La garde, elle, est écartée du tronc pour rester
+  // visible au lieu de disparaître derrière lui.
   boxeGarde: {
     head: [100, 38],
     neck: [100, 56],
     hip: [100, 106],
-    armA: [[116, 74], [108, 58]],
-    armB: [[84, 74], [92, 58]],
+    armA: [[116, 78], [104, 54]],
+    armB: [[84, 78], [96, 54]],
     legA: [[110, 142], [112, 178]],
     legB: [[90, 142], [88, 178]],
     axis: { legs: "lateral" },
   },
   boxeDirect: {
-    head: [100, 38],
-    neck: [100, 56],
+    head: [98, 38],
+    neck: [98, 56],
     hip: [100, 106],
-    armA: [[122, 70], [144, 66]],
-    armB: [[84, 74], [92, 58]],
-    legA: [[110, 142], [112, 178]],
-    legB: [[90, 142], [88, 178]],
+    armA: [[124, 62], [152, 60]],
+    armB: [[84, 78], [96, 54]],
+    legA: [[112, 142], [116, 178]],
+    legB: [[90, 142], [86, 178]],
     axis: { legs: "lateral" },
   },
   genouxCroisesA: {
