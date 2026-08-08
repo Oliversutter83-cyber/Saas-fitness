@@ -6,8 +6,9 @@
     "dev": "next dev",
     "build": "prisma migrate deploy && next build",
     "start": "next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate"
+    "lint": "eslint && node scripts/verifier-postures.mjs",
+    "postinstall": "prisma generate",
+    "verifier:postures": "node scripts/verifier-postures.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
