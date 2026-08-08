@@ -33,10 +33,23 @@ export default async function AbonnementPage({
           Cette séance fait partie de l&apos;abonnement. Activez votre accès pour la démarrer.
         </p>
       )}
+      {/*
+        L'exploitant n'a pas de formule à choisir : lui envoyer le message
+        d'accueil des abonnés le contredirait à trois lignes d'intervalle.
+      */}
       {params.bienvenue === "1" && (
         <p className="mb-6 rounded-2xl bg-brand-400/15 px-5 py-4 text-sm font-medium text-brand-100">
-          Bienvenue {user.firstName} ! Dernière étape : choisissez votre formule pour lancer vos{" "}
-          {TRIAL_DAYS} jours d&apos;essai.
+          {owner ? (
+            <>
+              Bienvenue {user.firstName} ! Votre compte est celui de l&apos;exploitant : l&apos;accès
+              est déjà ouvert, vous n&apos;avez aucune formule à choisir.
+            </>
+          ) : (
+            <>
+              Bienvenue {user.firstName} ! Dernière étape : choisissez votre formule pour lancer vos{" "}
+              {TRIAL_DAYS} jours d&apos;essai.
+            </>
+          )}
         </p>
       )}
       {params.paiement === "annule" && (
@@ -97,7 +110,12 @@ export default async function AbonnementPage({
           </p>
         )}
 
-        {active && (
+        {/*
+          Rien à gérer ni à désactiver pour l'exploitant : son accès ne vient pas
+          d'un abonnement, et le bouton « Désactiver l'accès démo » n'aurait
+          aucun effet sur lui.
+        */}
+        {active && !owner && (
           <div className="mt-6 flex flex-wrap gap-3">
             {stripeEnabled ? (
               <form action={ouvrirPortail}>

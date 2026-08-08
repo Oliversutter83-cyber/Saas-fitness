@@ -121,7 +121,13 @@ export function ExerciseCarousel({
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
+      {/*
+        Le sélecteur « Animer / Étapes » ne se comprime pas : sur un écran très
+        étroit (320 px), il poussait la carte au-delà du bord de l'écran et toute
+        la page devenait défilable horizontalement. On autorise donc le retour à
+        la ligne plutôt que le débordement.
+      */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         {mode === "steps" ? (
           <div className="flex gap-1.5" role="tablist" aria-label="Étapes">
             {steps.map((s, i) => (
