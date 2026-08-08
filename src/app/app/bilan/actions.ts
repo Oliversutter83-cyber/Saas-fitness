@@ -15,6 +15,12 @@ const schema = z.object({
   level: z.enum(["debutant", "intermediaire", "avance"]),
   daysPerWeek: z.coerce.number().int().min(1).max(7),
   constraints: z.string().trim().max(400).optional(),
+  minutesAvailable: z.coerce.number().pipe(z.union([z.literal(15), z.literal(25), z.literal(40)])),
+  // Le champ vaut "oui" ou "non" : un booléen coercé prendrait "non" pour vrai,
+  // toute chaîne non vide étant vraie en JavaScript.
+  canJump: z.enum(["oui", "non"]).transform((v) => v === "oui"),
+  lastActive: z.enum(["actif", "quelques-mois", "plus-un-an", "jamais"]),
+  blocker: z.enum(["aucun", "temps", "motivation", "douleurs"]),
   /** Data URL produite par le navigateur, déjà réduite */
   photo: z.string().optional(),
   /** L'abonné a coché « garder ma photo de départ » */
@@ -49,6 +55,10 @@ export async function genererBilan(
     level: formData.get("level"),
     daysPerWeek: formData.get("daysPerWeek"),
     constraints: formData.get("constraints") || undefined,
+    minutesAvailable: formData.get("minutesAvailable"),
+    canJump: formData.get("canJump"),
+    lastActive: formData.get("lastActive"),
+    blocker: formData.get("blocker"),
     photo: formData.get("photo") || undefined,
     keepPhoto: formData.get("keepPhoto") === "on",
   });
@@ -81,6 +91,10 @@ export async function genererBilan(
       level: profile.level,
       daysPerWeek: profile.daysPerWeek,
       constraints: profile.constraints ?? null,
+      minutesAvailable: profile.minutesAvailable,
+      canJump: profile.canJump,
+      lastActive: profile.lastActive,
+      blocker: profile.blocker,
       programSlug: plan.programSlug,
       planJson: JSON.stringify(plan),
       source: analysis ? "ia" : "regles",

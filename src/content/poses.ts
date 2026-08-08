@@ -70,6 +70,19 @@ const poses = {
     legB: [[80, 130], [57, 154]],
   },
 
+  // Même position ouverte, mais un pied posé : c'est le jack sans saut, pour
+  // qui a des voisins en dessous ou des articulations sensibles. Le pas latéral
+  // remplace le bond, les bras font le même trajet.
+  jackOuvertSol: {
+    head: [100, 40],
+    neck: [100, 58],
+    hip: [100, 108],
+    armA: [[112, 36], [118, 16]],
+    armB: [[88, 36], [82, 16]],
+    legA: [[116, 144], [128, 178]],
+    legB: [[84, 144], [72, 178]],
+  },
+
   // ---------------------------------------------------------------- squat
   squatHaut: {
     head: [100, 40],

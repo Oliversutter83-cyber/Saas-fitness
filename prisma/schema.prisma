@@ -86,6 +86,12 @@ model Assessment {
   level          String
   daysPerWeek    Int
   constraints    String?
+  // Ajoutées après coup, donc nullables : les bilans déjà enregistrés n'ont pas
+  // ces réponses. Le moteur applique ses valeurs par défaut quand elles manquent.
+  minutesAvailable Int?
+  canJump          Boolean?
+  lastActive       String?
+  blocker          String?
 
   // Plan produit : programme conseillé, planning et jalons (JSON)
   programSlug String

@@ -108,6 +108,18 @@ export type Exercise = {
   breathing: string;
   easier?: string;
   harder?: string;
+  /**
+   * Mouvement avec impact : les deux pieds quittent le sol, ou la course sur
+   * place fait vibrer le plancher. C'est ce qui pose problème en appartement et
+   * sur des articulations sensibles — d'où la question posée dans le bilan.
+   */
+  impact?: "saut";
+  /**
+   * Quoi faire quand les sauts sont exclus. Soit un autre exercice du
+   * catalogue, soit une simple consigne quand le geste reste le même et que
+   * seule la vitesse change.
+   */
+  lowImpact?: { slug?: string; note: string };
 };
 
 export const CATEGORIES: Record<Category, { label: string; emoji: string }> = {
@@ -274,6 +286,8 @@ export const EXERCISES: Exercise[] = [
       "Sauter en arrondissant le dos",
     ],
     breathing: "Soufflez au moment du saut.",
+    impact: "saut",
+    lowImpact: { slug: "squat", note: "Squat classique, en montant vite sans décoller." },
     easier: "squat",
   },
   {
@@ -874,6 +888,49 @@ export const EXERCISES: Exercise[] = [
     ],
     mistakes: ["Réception jambes raides", "Bras qui ne montent pas assez haut"],
     breathing: "Respiration rythmée et continue.",
+    impact: "saut",
+    easier: "jack-sans-saut",
+    lowImpact: { slug: "jack-sans-saut", note: "Un pied posé à la fois, sans jamais décoller." },
+  },
+  {
+    slug: "jack-sans-saut",
+    name: "Jack sans saut",
+    category: "cardio",
+    family: "cardio",
+    level: 1,
+    muscles: ["Cardio", "Épaules", "Mollets"],
+    equipment: "aucun",
+    mode: "time",
+    steps: [
+      {
+        pose: "debout",
+        title: "Position fermée",
+        detail: "Debout, pieds joints, bras le long du corps.",
+      },
+      {
+        pose: "jackOuvertSol",
+        title: "Ouverture",
+        detail:
+          "Posez un pied sur le côté — sans sauter — en levant les bras au-dessus de la tête. Le deuxième pied reste au sol.",
+      },
+      {
+        pose: "debout",
+        title: "Fermeture",
+        detail:
+          "Ramenez le pied, redescendez les bras, puis recommencez de l'autre côté. On alterne le pied qui part.",
+      },
+    ],
+    cues: [
+      "Même travail que le jumping jack, sans bruit ni impact",
+      "Les bras montent en entier : c'est eux qui font monter le souffle",
+      "Pensez à alterner le pied qui s'écarte, sinon un côté travaille plus que l'autre",
+    ],
+    mistakes: [
+      "Bras qui s'arrêtent aux épaules",
+      "Rythme trop lent : ça reste un exercice de cardio",
+    ],
+    breathing: "Respiration rythmée et continue.",
+    harder: "jumping-jack",
   },
   {
     slug: "montees-genoux",
@@ -899,6 +956,8 @@ export const EXERCISES: Exercise[] = [
     cues: ["Restez sur l'avant du pied", "Buste droit, abdos serrés"],
     mistakes: ["Se pencher en arrière", "Genoux qui ne montent pas assez haut"],
     breathing: "Respiration rythmée.",
+    impact: "saut",
+    lowImpact: { note: "Marchez sur place en montant les genoux : un pied reste toujours au sol." },
   },
   {
     slug: "talons-fesses",
@@ -924,6 +983,8 @@ export const EXERCISES: Exercise[] = [
     cues: ["Le bassin ne bouge pas", "Excellent pour finir un échauffement"],
     mistakes: ["Se pencher en avant"],
     breathing: "Respiration rythmée.",
+    impact: "saut",
+    lowImpact: { note: "Même mouvement en marchant, sans phase de course." },
   },
   {
     slug: "corde-a-sauter",
@@ -949,6 +1010,8 @@ export const EXERCISES: Exercise[] = [
     cues: ["Sauts minuscules : 2 à 3 cm suffisent", "Silencieux et sans matériel : parfait en appartement"],
     mistakes: ["Sauter trop haut", "Retomber sur les talons"],
     breathing: "Respiration régulière.",
+    impact: "saut",
+    lowImpact: { slug: "mollets", note: "Montées sur la pointe des pieds : même travail des mollets, aucun impact." },
   },
   {
     slug: "patineur",
@@ -975,6 +1038,8 @@ export const EXERCISES: Exercise[] = [
     cues: ["Amortissez sur la jambe d'appui", "Amplitude latérale plutôt que vitesse au début"],
     mistakes: ["Réception raide", "Buste qui s'effondre vers l'avant"],
     breathing: "Respiration rythmée.",
+    impact: "saut",
+    lowImpact: { slug: "fente-arriere", note: "Pas latéral posé au lieu du bond, ou fente arrière." },
   },
   {
     slug: "burpee",
@@ -1019,6 +1084,8 @@ export const EXERCISES: Exercise[] = [
     ],
     mistakes: ["Dos creusé en position planche", "Réception non amortie"],
     breathing: "Soufflez au saut, inspirez en descendant.",
+    impact: "saut",
+    lowImpact: { slug: "grimpeur", note: "Sans le saut final : on se relève simplement." },
     easier: "grimpeur",
   },
 

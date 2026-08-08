@@ -502,6 +502,17 @@ export function getSession(programSlug: string, week: number, day: number): Sess
   return getProgram(programSlug)?.sessions.find((s) => s.week === week && s.day === day);
 }
 
+/** Tous les exercices d'un programme, sans doublon, dans l'ordre d'apparition. */
+export function programExerciseSlugs(program: Program): string[] {
+  const seen = new Set<string>();
+  for (const session of program.sessions) {
+    for (const block of session.blocks) {
+      for (const item of block.items) seen.add(item.exercise);
+    }
+  }
+  return [...seen];
+}
+
 export function weekLabel(week: number) {
   return WEEK_PLAN[Math.min(week - 1, WEEK_PLAN.length - 1)].label;
 }

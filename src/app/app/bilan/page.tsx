@@ -73,10 +73,67 @@ export default async function BilanPage() {
           <span>⏱ {plan.minutesPerSession} min par séance</span>
           <span>📅 4 semaines</span>
         </p>
+        {plan.formatNote && (
+          <p className="mt-4 rounded-2xl bg-ink-950/40 px-4 py-3 text-sm leading-relaxed text-white/60">
+            {plan.formatNote}
+          </p>
+        )}
         <Button href={`/app/programmes/${plan.programSlug}`} className="mt-6">
           Ouvrir le programme
         </Button>
       </section>
+
+      {/*
+        Ce que le questionnaire a changé. C'est la contrepartie des questions
+        posées : sans ce bloc, rien ne distingue un plan personnalisé d'un plan
+        générique, et les questions ressemblent à de la collecte pour rien.
+      */}
+      {plan.adjustments?.length > 0 && (
+        <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-7">
+          <h2 className="text-xl font-extrabold text-white">Ce que vos réponses ont changé</h2>
+          <ul className="mt-4 space-y-3">
+            {plan.adjustments.map((line) => (
+              <li key={line} className="flex gap-3 text-sm leading-relaxed text-white/70">
+                <span className="text-brand-400" aria-hidden>
+                  →
+                </span>
+                {line}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Remplacements sans impact */}
+      {plan.swaps?.length > 0 && (
+        <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-7">
+          <h2 className="text-xl font-extrabold text-white">Vos remplacements sans saut</h2>
+          <p className="mt-1 text-sm leading-relaxed text-white/55">
+            Ces mouvements apparaissent dans votre programme. Quand vous les croisez pendant une
+            séance, faites la version indiquée à droite.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {plan.swaps.map((swap) => (
+              <li
+                key={swap.from}
+                className="rounded-2xl bg-ink-950/40 px-4 py-3 text-sm text-white/70"
+              >
+                <p className="font-semibold text-white">
+                  {swap.from} <span className="text-white/40">→</span>{" "}
+                  {swap.slug ? (
+                    <Link href={`/exercices/${swap.slug}`} className="text-brand-300 underline">
+                      {swap.to}
+                    </Link>
+                  ) : (
+                    swap.to
+                  )}
+                </p>
+                <p className="mt-1 leading-relaxed">{swap.note}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Semaine type */}
       <section>

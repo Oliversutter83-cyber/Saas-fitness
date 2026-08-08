@@ -43,6 +43,31 @@ const LEVELS = [
   { value: "avance", label: "Confirmé" },
 ];
 
+const MINUTES = [
+  { value: "15", label: "15 min" },
+  { value: "25", label: "25 min" },
+  { value: "40", label: "40 min et plus" },
+];
+
+const JUMP = [
+  { value: "oui", label: "Oui, sans problème" },
+  { value: "non", label: "Non — voisins ou articulations" },
+];
+
+const LAST_ACTIVE = [
+  { value: "actif", label: "Je m'entraîne déjà" },
+  { value: "quelques-mois", label: "Quelques mois" },
+  { value: "plus-un-an", label: "Plus d'un an" },
+  { value: "jamais", label: "Jamais vraiment" },
+];
+
+const BLOCKERS = [
+  { value: "aucun", label: "Rien de particulier" },
+  { value: "temps", label: "Le manque de temps" },
+  { value: "motivation", label: "La motivation" },
+  { value: "douleurs", label: "Des douleurs" },
+];
+
 export function BilanForm() {
   const [state, formAction] = useActionState<BilanState, FormData>(genererBilan, undefined);
   const [preview, setPreview] = useState<string | null>(null);
@@ -162,6 +187,38 @@ export function BilanForm() {
           </select>
         </label>
 
+        <Choice
+          label="Combien de temps avez-vous par séance ?"
+          hint="Le plan annonce ce temps-là, et vous dit quoi retirer pour y tenir."
+          name="minutesAvailable"
+          options={MINUTES}
+          defaultValue="25"
+        />
+
+        <Choice
+          label="Pouvez-vous sauter chez vous ?"
+          hint="Si non, chaque mouvement avec impact est remplacé par sa version au sol."
+          name="canJump"
+          options={JUMP}
+          defaultValue="oui"
+        />
+
+        <Choice
+          label="Depuis combien de temps n'avez-vous plus d'entraînement régulier ?"
+          hint="C'est ce qui décide du point de départ, davantage que le niveau ressenti."
+          name="lastActive"
+          options={LAST_ACTIVE}
+          defaultValue="plus-un-an"
+        />
+
+        <Choice
+          label="Qu'est-ce qui vous a fait arrêter la dernière fois ?"
+          hint="Le plan est construit pour éviter de reproduire ce scénario."
+          name="blocker"
+          options={BLOCKERS}
+          defaultValue="aucun"
+        />
+
         <label className="block">
           <span className="text-sm font-semibold text-white/80">
             Blessures, douleurs ou contraintes ? (facultatif)
@@ -231,11 +288,14 @@ function Field({
 
 function Choice({
   label,
+  hint,
   name,
   options,
   defaultValue,
 }: {
   label: string;
+  /** À quoi sert la réponse : une question dont on ignore l'effet se répond mal. */
+  hint?: string;
   name: string;
   options: { value: string; label: string }[];
   defaultValue: string;
@@ -243,6 +303,7 @@ function Choice({
   return (
     <fieldset>
       <legend className="text-sm font-semibold text-white/80">{label}</legend>
+      {hint && <p className="mt-0.5 text-xs leading-relaxed text-white/45">{hint}</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {options.map((option) => (
           <label key={option.value} className="cursor-pointer">

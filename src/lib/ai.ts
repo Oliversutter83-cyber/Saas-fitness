@@ -75,7 +75,10 @@ export async function analyseProfile(
     `Poids déclaré : ${profile.weightKg} kg`,
     `Objectif : ${profile.goal}`,
     `Niveau déclaré : ${profile.level}`,
-    `Disponibilité : ${profile.daysPerWeek} jours par semaine`,
+    `Disponibilité : ${profile.daysPerWeek} jours par semaine, ${profile.minutesAvailable} minutes par séance`,
+    `Dernière pratique régulière : ${profile.lastActive}`,
+    `Sauts possibles à domicile : ${profile.canJump ? "oui" : "non"}`,
+    `Ce qui a fait arrêter la dernière fois : ${profile.blocker}`,
     profile.constraints?.trim()
       ? `Contraintes signalées : ${profile.constraints.trim()}`
       : "Aucune contrainte signalée",
