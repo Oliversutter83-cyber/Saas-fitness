@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { FigureBody } from "@/components/Figure";
 import { TRIAL_DAYS } from "@/config";
 import { CATEGORIES, keyPoseOf, type Category, type Exercise } from "@/content/exercises";
@@ -22,17 +22,122 @@ const FORMATS = {
 
 type FormatId = keyof typeof FORMATS;
 
+/**
+ * Les couleurs du site, reprises telles quelles.
+ *
+ * Une publicité verte pour un site noir et or trahit le clic : la personne
+ * arrive sur une page qui ne ressemble pas à ce qu'elle vient de voir, et se
+ * demande si elle s'est trompée d'endroit. Ces valeurs sont celles de
+ * globals.css — elles doivent le rester.
+ */
 const THEMES = {
-  sombre: { bg: "#0d1412", text: "#ffffff", muted: "#8ba39a", accent: "#9ff05e", card: "#16211e" },
-  clair: { bg: "#f2fee7", text: "#0d1412", muted: "#4a635b", accent: "#47a006", card: "#ffffff" },
+  sombre: {
+    bg: "#0a0908",
+    text: "#ffffff",
+    muted: "#8a8078",
+    accent: "#ddb13c",
+    action: "#cf2f2f",
+    card: "#131110",
+  },
+  or: {
+    bg: "#ddb13c",
+    text: "#0a0908",
+    muted: "#5d4415",
+    accent: "#0a0908",
+    action: "#cf2f2f",
+    card: "#eacb71",
+  },
+  clair: {
+    bg: "#fdf9ef",
+    text: "#0a0908",
+    muted: "#7d5b16",
+    accent: "#a37718",
+    action: "#cf2f2f",
+    card: "#ffffff",
+  },
 } as const;
 
 type ThemeId = keyof typeof THEMES;
 
 type Slide =
-  | { kind: "hook"; title: string; kicker: string }
+  | { kind: "hook"; kicker: string; question: string; reponse: string }
   | { kind: "exercise"; index: number; total: number; exercise: Exercise; caption: string }
   | { kind: "cta"; title: string; subtitle: string };
+
+/**
+ * Accroches prêtes à publier.
+ *
+ * La première slide décide seule si quelqu'un fait glisser ou passe son chemin.
+ * Le schéma qui fonctionne est toujours le même : on nomme l'obstacle que la
+ * personne a en tête, puis on le lève en une phrase.
+ *
+ * Aucune ne promet de résultat — ni kilos perdus, ni délai. Ce sont des
+ * allégations qu'aucun programme ne peut tenir, que la loi encadre, et qui
+ * valent des refus de publicité chez Meta comme chez TikTok. Toutes les
+ * affirmations ci-dessous sont vérifiables dans le produit.
+ */
+const ACCROCHES = [
+  {
+    label: "Pas de salle à proximité",
+    kicker: "Sans matériel",
+    question: "Pas de salle de sport près de chez toi ?",
+    reponse: "Ton salon suffit.",
+  },
+  {
+    label: "Pas le temps",
+    kicker: "3 séances par semaine",
+    question: "Jamais le temps d'aller à la salle ?",
+    reponse: "25 minutes chez toi, c'est tout.",
+  },
+  {
+    label: "Appartement et voisins",
+    kicker: "Sans bruit",
+    question: "Tu habites en appartement ?",
+    reponse: "Un programme entier sans un seul saut.",
+  },
+  {
+    label: "Peur de mal faire",
+    kicker: "70 exercices illustrés",
+    question: "Peur de mal faire les mouvements ?",
+    reponse: "Chacun est décomposé étape par étape.",
+  },
+  {
+    label: "Ne sait pas commencer",
+    kicker: "Pour débuter",
+    question: "Tu ne sais pas par où commencer ?",
+    reponse: "Un programme de 4 semaines, jour par jour.",
+  },
+  {
+    label: "Abandonne toujours",
+    kicker: "4 semaines",
+    question: "Tu abandonnes au bout de deux semaines ?",
+    reponse: "Des objectifs qu'on coche, pas qu'on espère.",
+  },
+  {
+    label: "Longue pause",
+    kicker: "Reprise en douceur",
+    question: "Des années que tu n'as pas bougé ?",
+    reponse: "On reprend sans saut et sans matériel.",
+  },
+  {
+    label: "Prix de la salle",
+    kicker: "9,99 € par mois",
+    question: "Un abonnement en salle que tu n'utilises pas ?",
+    reponse: "Moins de 10 € par mois, chez toi.",
+  },
+  {
+    label: "Fessiers et jambes",
+    kicker: "Bas du corps",
+    question: "Muscler tes fessiers sans mettre un pied en salle ?",
+    reponse: "Un cycle complet de 4 semaines à la maison.",
+  },
+  {
+    label: "Zéro matériel",
+    kicker: "À la maison",
+    question: "Zéro haltère, zéro machine, zéro abonnement ?",
+    reponse: "Une chaise et un mur suffisent.",
+  },
+] as const;
 
 export function CarouselStudio({
   exercises,
@@ -46,8 +151,9 @@ export function CarouselStudio({
   const [format, setFormat] = useState<FormatId>("carre");
   const [theme, setTheme] = useState<ThemeId>("sombre");
   const [category, setCategory] = useState<Category | "">("");
-  const [hook, setHook] = useState("5 exercices pour se muscler sans matériel");
-  const [kicker, setKicker] = useState("À faire chez soi, 20 minutes");
+  const [kicker, setKicker] = useState<string>(ACCROCHES[0].kicker);
+  const [question, setQuestion] = useState<string>(ACCROCHES[0].question);
+  const [reponse, setReponse] = useState<string>(ACCROCHES[0].reponse);
   const [ctaTitle, setCtaTitle] = useState("Le programme complet est en bio");
   const [ctaSubtitle, setCtaSubtitle] = useState(`4 semaines · ${TRIAL_DAYS} jours d'essai`);
   const [count, setCount] = useState(5);
@@ -69,7 +175,7 @@ export function CarouselStudio({
 
   const slides: Slide[] = useMemo(
     () => [
-      { kind: "hook", title: hook, kicker },
+      { kind: "hook", kicker, question, reponse },
       ...selected.map((exercise, i) => ({
         kind: "exercise" as const,
         index: i + 1,
@@ -79,10 +185,20 @@ export function CarouselStudio({
       })),
       { kind: "cta", title: ctaTitle, subtitle: ctaSubtitle },
     ],
-    [hook, kicker, selected, ctaTitle, ctaSubtitle],
+    [kicker, question, reponse, selected, ctaTitle, ctaSubtitle],
   );
 
-  const caption = buildCaption(hook, selected, handle);
+  const caption = buildCaption(question, reponse, selected, handle);
+
+  // Les slides ne sont dessinées qu'une fois la page arrivée dans le navigateur :
+  // la mise en page mesure le texte avec un canvas, qui n'existe pas côté
+  // serveur. `useSyncExternalStore` distingue les deux rendus sans passer par un
+  // état modifié dans un effet, qui déclencherait un second rendu en cascade.
+  const monte = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   // Les SVG rendus dans l'aperçu, dans l'ordre, pour l'export groupé.
   const svgRefs = useRef<(SVGSVGElement | null)[]>([]);
@@ -103,6 +219,7 @@ export function CarouselStudio({
           onChange={(v) => setTheme(v as ThemeId)}
           options={[
             { value: "sombre", label: "Sombre" },
+            { value: "or", label: "Or" },
             { value: "clair", label: "Clair" },
           ]}
         />
@@ -138,10 +255,44 @@ export function CarouselStudio({
           />
         </label>
 
-        <Text label="Accroche (slide 1)" value={hook} onChange={setHook} />
-        <Text label="Sous-titre (slide 1)" value={kicker} onChange={setKicker} />
+        <Text label="Étiquette (slide 1)" value={kicker} onChange={setKicker} />
+        <Text label="La question qui accroche" value={question} onChange={setQuestion} />
+        <Text label="La réponse, juste en dessous" value={reponse} onChange={setReponse} />
         <Text label="Appel à l'action (dernière slide)" value={ctaTitle} onChange={setCtaTitle} />
         <Text label="Sous-titre de l'appel à l'action" value={ctaSubtitle} onChange={setCtaSubtitle} />
+      </div>
+
+      {/* Accroches prêtes à l'emploi */}
+      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+        <h2 className="font-extrabold text-white">Accroches prêtes à publier</h2>
+        <p className="mt-1 text-sm leading-relaxed text-white/55">
+          La première slide décide seule si quelqu&apos;un fait glisser ou passe son chemin. Chacune
+          nomme un obstacle, puis le lève en une phrase. Vous pouvez les retoucher ensuite dans les
+          champs ci-dessus.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {ACCROCHES.map((a) => {
+            const active = a.question === question;
+            return (
+              <button
+                key={a.label}
+                type="button"
+                onClick={() => {
+                  setKicker(a.kicker);
+                  setQuestion(a.question);
+                  setReponse(a.reponse);
+                }}
+                className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+                  active
+                    ? "bg-brand-400/20 text-brand-200 ring-1 ring-brand-400/40"
+                    : "bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+              >
+                {a.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Choix manuel des exercices */}
@@ -190,8 +341,15 @@ export function CarouselStudio({
           <DownloadAll svgs={svgRefs} count={slides.length} format={format} />
         </div>
 
+        {!monte && (
+          <p className="mt-5 rounded-2xl bg-white/5 px-5 py-8 text-center text-sm text-white/50">
+            Préparation des slides…
+          </p>
+        )}
+
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {slides.map((slide, i) => (
+          {monte &&
+            slides.map((slide, i) => (
             <SlideCard
               key={i}
               slide={slide}
@@ -200,11 +358,11 @@ export function CarouselStudio({
               theme={theme}
               siteName={siteName}
               handle={handle}
-              onMount={(node) => {
-                svgRefs.current[i] = node;
-              }}
-            />
-          ))}
+                onMount={(node) => {
+                  svgRefs.current[i] = node;
+                }}
+              />
+            ))}
         </div>
       </div>
 
@@ -368,43 +526,100 @@ function SlideSvg({
     >
       <rect width={w} height={h} fill={c.bg} />
 
-      {slide.kind === "hook" && (
-        <>
-          <WrappedText
-            text={slide.title.toUpperCase()}
-            x={80}
-            y={h * 0.34}
-            maxChars={16}
-            size={Math.round(w * 0.105)}
-            lineHeight={1.06}
-            fill={c.text}
-            font={font}
-            weight={800}
-          />
-          <text
-            x={80}
-            y={h * 0.34 - Math.round(w * 0.105) * 1.5}
-            fill={c.accent}
-            fontFamily={font}
-            fontSize={Math.round(w * 0.032)}
-            fontWeight={700}
-            letterSpacing={3}
-          >
-            {slide.kicker.toUpperCase()}
-          </text>
-          <rect x={80} y={h * 0.62} width={w * 0.24} height={10} rx={5} fill={c.accent} />
-          <text
-            x={80}
-            y={h - 80}
-            fill={c.muted}
-            fontFamily={font}
-            fontSize={Math.round(w * 0.03)}
-            fontWeight={700}
-          >
-            {handle} · glisse →
-          </text>
-        </>
-      )}
+      {slide.kind === "hook" &&
+        (() => {
+          // Les trois blocs sont mesurés puis empilés autour du centre : à
+          // positions fixes, une accroche longue chevauchait sa réponse.
+          const marge = 80;
+          const largeur = w - marge * 2;
+          const etiquette = ajuster(slide.kicker.toUpperCase(), {
+            largeurMax: largeur,
+            lignesMax: 1,
+            sizeMax: Math.round(w * 0.034),
+            sizeMin: Math.round(w * 0.022),
+            weight: 700,
+            font,
+            lineHeight: 1.2,
+          });
+          const q = ajuster(slide.question.toUpperCase(), {
+            largeurMax: largeur,
+            lignesMax: 5,
+            sizeMax: Math.round(w * 0.098),
+            sizeMin: Math.round(w * 0.05),
+            weight: 800,
+            font,
+            lineHeight: 1.06,
+          });
+          const r = ajuster(slide.reponse, {
+            largeurMax: largeur,
+            lignesMax: 3,
+            sizeMax: Math.round(w * 0.055),
+            sizeMin: Math.round(w * 0.032),
+            weight: 700,
+            font,
+            lineHeight: 1.25,
+          });
+
+          const ecartEtiquette = Math.round(w * 0.05);
+          const ecartReponse = Math.round(w * 0.06);
+          const total = etiquette.hauteur + ecartEtiquette + q.hauteur + ecartReponse + r.hauteur;
+          const hautDuBloc = h * 0.5 - total / 2;
+
+          const yEtiquette = hautDuBloc + etiquette.size;
+          const yQuestion = yEtiquette + ecartEtiquette + q.size;
+          const yReponse = yQuestion + (q.hauteur - q.size) + ecartReponse + r.size;
+
+          return (
+            <>
+              <BlocTexte
+                bloc={etiquette}
+                x={marge}
+                y={yEtiquette}
+                lineHeight={1.2}
+                fill={c.accent}
+                font={font}
+                weight={700}
+                letterSpacing={3}
+              />
+              <BlocTexte
+                bloc={q}
+                x={marge}
+                y={yQuestion}
+                lineHeight={1.06}
+                fill={c.text}
+                font={font}
+                weight={800}
+              />
+              <rect
+                x={marge}
+                y={yReponse - r.size - Math.round(w * 0.03)}
+                width={Math.round(w * 0.16)}
+                height={8}
+                rx={4}
+                fill={c.accent}
+              />
+              <BlocTexte
+                bloc={r}
+                x={marge}
+                y={yReponse}
+                lineHeight={1.25}
+                fill={c.accent}
+                font={font}
+                weight={700}
+              />
+              <text
+                x={marge}
+                y={h - 80}
+                fill={c.muted}
+                fontFamily={font}
+                fontSize={Math.round(w * 0.03)}
+                fontWeight={700}
+              >
+                {handle} · glisse →
+              </text>
+            </>
+          );
+        })()}
 
       {slide.kind === "exercise" && (
         <>
@@ -419,12 +634,18 @@ function SlideSvg({
           >
             {slide.index}/{slide.total}
           </text>
-          <WrappedText
-            text={slide.exercise.name.toUpperCase()}
+          <BlocTexte
+            bloc={ajuster(slide.exercise.name.toUpperCase(), {
+              largeurMax: w - 160,
+              lignesMax: 2,
+              sizeMax: Math.round(w * 0.075),
+              sizeMin: Math.round(w * 0.042),
+              weight: 800,
+              font,
+              lineHeight: 1.06,
+            })}
             x={80}
             y={230}
-            maxChars={18}
-            size={Math.round(w * 0.075)}
             lineHeight={1.06}
             fill={c.text}
             font={font}
@@ -449,19 +670,25 @@ function SlideSvg({
             <FigureBody
               pose={keyPoseOf(slide.exercise)}
               colors={{
-                stroke: theme === "sombre" ? "#e0fcc9" : "#0d1412",
-                strokeDim: theme === "sombre" ? "#4a635b" : "#a7b6b1",
-                prop: theme === "sombre" ? "#22322d" : "#e6ece9",
+                stroke: theme === "sombre" ? "#eacb71" : "#0a0908",
+                strokeDim: theme === "sombre" ? "#4a443e" : "#a8a099",
+                prop: theme === "sombre" ? "#2c2825" : "#ece5d8",
               }}
             />
           </svg>
 
-          <WrappedText
-            text={slide.caption}
+          <BlocTexte
+            bloc={ajuster(slide.caption, {
+              largeurMax: w - 160,
+              lignesMax: 3,
+              sizeMax: Math.round(w * 0.038),
+              sizeMin: Math.round(w * 0.026),
+              weight: 600,
+              font,
+              lineHeight: 1.35,
+            })}
             x={80}
             y={h * 0.78}
-            maxChars={34}
-            size={Math.round(w * 0.038)}
             lineHeight={1.35}
             fill={c.muted}
             font={font}
@@ -480,115 +707,228 @@ function SlideSvg({
         </>
       )}
 
-      {slide.kind === "cta" && (
-        <>
-          <WrappedText
-            text={slide.title.toUpperCase()}
-            x={80}
-            y={h * 0.4}
-            maxChars={15}
-            size={Math.round(w * 0.095)}
-            lineHeight={1.08}
-            fill={c.text}
-            font={font}
-            weight={800}
-          />
-          <text
-            x={80}
-            y={h * 0.52}
-            fill={c.accent}
-            fontFamily={font}
-            fontSize={Math.round(w * 0.042)}
-            fontWeight={700}
-          >
-            {slide.subtitle}
-          </text>
-          <rect
-            x={80}
-            y={h * 0.6}
-            width={w * 0.55}
-            height={Math.round(w * 0.11)}
-            rx={Math.round(w * 0.055)}
-            fill={c.accent}
-          />
-          <text
-            x={80 + (w * 0.55) / 2}
-            y={h * 0.6 + Math.round(w * 0.072)}
-            fill="#0d1412"
-            fontFamily={font}
-            fontSize={Math.round(w * 0.038)}
-            fontWeight={800}
-            textAnchor="middle"
-          >
-            LIEN EN BIO
-          </text>
-          <text
-            x={80}
-            y={h - 80}
-            fill={c.muted}
-            fontFamily={font}
-            fontSize={Math.round(w * 0.03)}
-            fontWeight={700}
-          >
-            {siteName} · {handle}
-          </text>
-        </>
-      )}
+      {slide.kind === "cta" &&
+        (() => {
+          // Même empilement mesuré que l'accroche : à positions fixes, un appel
+          // à l'action de trois lignes recouvrait son sous-titre et le bouton.
+          const marge = 80;
+          const largeur = w - marge * 2;
+          const titre = ajuster(slide.title.toUpperCase(), {
+            largeurMax: largeur,
+            lignesMax: 4,
+            sizeMax: Math.round(w * 0.09),
+            sizeMin: Math.round(w * 0.05),
+            weight: 800,
+            font,
+            lineHeight: 1.08,
+          });
+          const sous = ajuster(slide.subtitle, {
+            largeurMax: largeur,
+            lignesMax: 2,
+            sizeMax: Math.round(w * 0.042),
+            sizeMin: Math.round(w * 0.028),
+            weight: 700,
+            font,
+            lineHeight: 1.3,
+          });
+
+          const hauteurBouton = Math.round(w * 0.11);
+          const ecart = Math.round(w * 0.05);
+          const total = titre.hauteur + ecart + sous.hauteur + ecart + hauteurBouton;
+          const haut = h * 0.5 - total / 2;
+
+          const yTitre = haut + titre.size;
+          const ySous = yTitre + (titre.hauteur - titre.size) + ecart + sous.size;
+          const yBouton = ySous + (sous.hauteur - sous.size) + ecart;
+
+          return (
+            <>
+              <BlocTexte
+                bloc={titre}
+                x={marge}
+                y={yTitre}
+                lineHeight={1.08}
+                fill={c.text}
+                font={font}
+                weight={800}
+              />
+              <BlocTexte
+                bloc={sous}
+                x={marge}
+                y={ySous}
+                lineHeight={1.3}
+                fill={c.accent}
+                font={font}
+                weight={700}
+              />
+              <rect
+                x={marge}
+                y={yBouton}
+                width={Math.round(w * 0.55)}
+                height={hauteurBouton}
+                rx={Math.round(hauteurBouton / 2)}
+                fill={c.action}
+              />
+              <text
+                x={marge + Math.round(w * 0.55) / 2}
+                y={yBouton + Math.round(hauteurBouton * 0.66)}
+                fill="#ffffff"
+                fontFamily={font}
+                fontSize={Math.round(w * 0.038)}
+                fontWeight={800}
+                textAnchor="middle"
+              >
+                LIEN EN BIO
+              </text>
+              <text
+                x={marge}
+                y={h - 80}
+                fill={c.muted}
+                fontFamily={font}
+                fontSize={Math.round(w * 0.03)}
+                fontWeight={700}
+              >
+                {siteName} · {handle}
+              </text>
+            </>
+          );
+        })()}
     </svg>
   );
 }
 
-/** Découpe un texte en lignes et les empile en <tspan>. */
-function WrappedText({
-  text,
+// ------------------------------------------------------------- mise en page
+//
+// Le découpage se faisait en comptant les caractères, ce qui déborde forcément :
+// un « M » est deux fois plus large qu'un « i », et une accroche en majuscules
+// sortait du cadre. On mesure désormais le texte pour de vrai, et on réduit la
+// taille jusqu'à ce qu'il tienne dans sa boîte.
+
+let mesureur: CanvasRenderingContext2D | null | undefined;
+
+function largeurTexte(texte: string, size: number, weight: number, font: string): number {
+  if (mesureur === undefined) {
+    mesureur = document.createElement("canvas").getContext("2d");
+  }
+  if (!mesureur) {
+    // Approximation de secours si le canvas est indisponible.
+    return texte.length * size * 0.58;
+  }
+  mesureur.font = `${weight} ${size}px ${font}`;
+  return mesureur.measureText(texte).width;
+}
+
+type Bloc = { lignes: string[]; size: number; hauteur: number };
+
+/**
+ * Découpe un texte pour qu'il tienne dans une largeur et un nombre de lignes
+ * donnés, en réduisant la taille de police si nécessaire.
+ */
+function ajuster(
+  texte: string,
+  {
+    largeurMax,
+    lignesMax,
+    sizeMax,
+    sizeMin,
+    weight,
+    font,
+    lineHeight,
+  }: {
+    largeurMax: number;
+    lignesMax: number;
+    sizeMax: number;
+    sizeMin: number;
+    weight: number;
+    font: string;
+    lineHeight: number;
+  },
+): Bloc {
+  const mots = texte.split(/\s+/).filter(Boolean);
+  const pas = Math.max(1, Math.round(sizeMax * 0.04));
+
+  for (let size = sizeMax; size >= sizeMin; size -= pas) {
+    const lignes: string[] = [];
+    let courante = "";
+    let motTropLarge = false;
+
+    for (const mot of mots) {
+      const essai = courante ? `${courante} ${mot}` : mot;
+      if (largeurTexte(essai, size, weight, font) <= largeurMax) {
+        courante = essai;
+        continue;
+      }
+      if (courante) lignes.push(courante);
+      courante = mot;
+      if (largeurTexte(mot, size, weight, font) > largeurMax) {
+        motTropLarge = true;
+        break;
+      }
+    }
+    if (motTropLarge) continue;
+    if (courante) lignes.push(courante);
+
+    if (lignes.length <= lignesMax) {
+      return { lignes, size, hauteur: (lignes.length - 1) * size * lineHeight + size };
+    }
+  }
+
+  // Aucune taille ne convient : on rend au minimum plutôt que de ne rien rendre.
+  const lignes: string[] = [];
+  let courante = "";
+  for (const mot of mots) {
+    const essai = courante ? `${courante} ${mot}` : mot;
+    if (largeurTexte(essai, sizeMin, weight, font) <= largeurMax) courante = essai;
+    else {
+      if (courante) lignes.push(courante);
+      courante = mot;
+    }
+  }
+  if (courante) lignes.push(courante);
+  return {
+    lignes,
+    size: sizeMin,
+    hauteur: (lignes.length - 1) * sizeMin * lineHeight + sizeMin,
+  };
+}
+
+/** Empile les lignes d'un bloc déjà ajusté, première ligne à `y`. */
+function BlocTexte({
+  bloc,
   x,
   y,
-  maxChars,
-  size,
   lineHeight,
   fill,
   font,
   weight,
+  letterSpacing,
 }: {
-  text: string;
+  bloc: Bloc;
   x: number;
   y: number;
-  maxChars: number;
-  size: number;
   lineHeight: number;
   fill: string;
   font: string;
   weight: number;
+  letterSpacing?: number;
 }) {
-  const lines = wrap(text, maxChars);
   return (
-    <text x={x} y={y} fill={fill} fontFamily={font} fontSize={size} fontWeight={weight}>
-      {lines.map((line, i) => (
-        <tspan key={i} x={x} dy={i === 0 ? 0 : size * lineHeight}>
-          {line}
+    <text
+      x={x}
+      y={y}
+      fill={fill}
+      fontFamily={font}
+      fontSize={bloc.size}
+      fontWeight={weight}
+      letterSpacing={letterSpacing}
+    >
+      {bloc.lignes.map((ligne, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : bloc.size * lineHeight}>
+          {ligne}
         </tspan>
       ))}
     </text>
   );
-}
-
-function wrap(text: string, maxChars: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let current = "";
-
-  for (const word of words) {
-    if (!current) {
-      current = word;
-    } else if (`${current} ${word}`.length <= maxChars) {
-      current += ` ${word}`;
-    } else {
-      lines.push(current);
-      current = word;
-    }
-  }
-  if (current) lines.push(current);
-  return lines;
 }
 
 // -------------------------------------------------------------------- export
@@ -636,7 +976,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 // ---------------------------------------------------------------- légende
 
-function buildCaption(hook: string, exercises: Exercise[], handle: string): string {
+function buildCaption(
+  question: string,
+  reponse: string,
+  exercises: Exercise[],
+  handle: string,
+): string {
   const list = exercises.map((e, i) => `${i + 1}. ${e.name} — ${e.cues[0] ?? ""}`).join("\n");
   const tags = [
     "#fitnessmaison",
@@ -652,7 +997,8 @@ function buildCaption(hook: string, exercises: Exercise[], handle: string): stri
   ];
 
   return [
-    `${hook} 👇`,
+    question,
+    `${reponse} 👇`,
     "",
     list,
     "",
