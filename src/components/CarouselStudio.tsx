@@ -840,6 +840,18 @@ function Fond({
   );
 }
 
+/**
+ * Largeur du téléphone, choisie d'après la place qui reste sous le texte.
+ *
+ * L'écran ne devient parlant qu'une fois la vignette du mouvement entièrement
+ * visible : elle se termine à 1,3 largeur sous le haut de l'appareil. Quand la
+ * place manque — format carré, accroche de trois lignes — mieux vaut un
+ * téléphone plus petit et lisible qu'un grand téléphone tranché en plein texte.
+ */
+function largeurTelephone(w: number, place: number): number {
+  return Math.round(Math.min(w * 0.54, Math.max(w * 0.3, place / 1.42)));
+}
+
 function SlideSvg({
   ref,
   slide,
@@ -892,11 +904,23 @@ function SlideSvg({
           // positions fixes, une accroche longue chevauchait sa réponse.
           const marge = 80;
           const largeur = w - marge * 2;
+          const avecTelephone =
+            visuel === "telephone" && Boolean(slide.exemple);
+          /*
+            Le téléphone et le titre se disputent la hauteur. En format carré
+            il n'y en a pas assez pour les deux à pleine taille : le titre
+            mangeait tout et il ne restait qu'une tranche d'appareil, sans le
+            mouvement — c'est-à-dire sans la seule chose qui donne envie de
+            s'abonner. Le titre est donc réduit à proportion de la place
+            réellement disponible ; en vertical, où la hauteur ne manque pas,
+            rien ne change.
+          */
+          const echelle = avecTelephone ? Math.min(1, (h / w) * 0.74) : 1;
           const etiquette = ajuster(slide.kicker.toUpperCase(), {
             largeurMax: largeur,
             lignesMax: 1,
-            sizeMax: Math.round(w * 0.034),
-            sizeMin: Math.round(w * 0.022),
+            sizeMax: Math.round(w * 0.034 * echelle),
+            sizeMin: Math.round(w * 0.022 * echelle),
             weight: 700,
             font,
             lineHeight: 1.2,
@@ -905,8 +929,8 @@ function SlideSvg({
           const q = ajuster(slide.question.toUpperCase(), {
             largeurMax: largeur,
             lignesMax: 5,
-            sizeMax: Math.round(w * 0.098),
-            sizeMin: Math.round(w * 0.05),
+            sizeMax: Math.round(w * 0.098 * echelle),
+            sizeMin: Math.round(w * 0.05 * echelle),
             weight: 800,
             font,
             lineHeight: 1.06,
@@ -914,17 +938,20 @@ function SlideSvg({
           const r = ajuster(slide.reponse, {
             largeurMax: largeur,
             lignesMax: 3,
-            sizeMax: Math.round(w * 0.055),
-            sizeMin: Math.round(w * 0.032),
+            sizeMax: Math.round(w * 0.055 * echelle),
+            sizeMin: Math.round(w * 0.032 * echelle),
             weight: 700,
             font,
             lineHeight: 1.25,
           });
 
-          const avecTelephone =
-            visuel === "telephone" && Boolean(slide.exemple);
-          const ecartEtiquette = Math.round(w * 0.05);
-          const ecartReponse = Math.round(w * 0.06);
+          const ecartEtiquette = Math.round(w * 0.05 * echelle);
+          // Le filet doré se glisse entre la question et la réponse : il lui
+          // faut la place des jambages de la dernière ligne — sur « CHEZ TOI ? »
+          // la barre passait au travers de la queue du point d'interrogation.
+          const ecartReponse = Math.round(
+            Math.max(w * 0.06 * echelle, q.size * 0.68),
+          );
           const total =
             etiquette.hauteur +
             ecartEtiquette +
@@ -939,7 +966,7 @@ function SlideSvg({
           const hautDuBloc = Math.max(
             marge,
             Math.min(
-              avecTelephone ? h * 0.08 : h * 0.5 - total / 2,
+              avecTelephone ? h * 0.06 : h * 0.5 - total / 2,
               basLibre - total,
             ),
           );
@@ -948,6 +975,13 @@ function SlideSvg({
           const yQuestion = yEtiquette + ecartEtiquette + q.size;
           const yReponse =
             yQuestion + (q.hauteur - q.size) + ecartReponse + r.size;
+
+          // `yReponse` est la ligne de base de la PREMIÈRE ligne : sans ajouter
+          // la hauteur des suivantes, le téléphone recouvrait la fin d'une
+          // réponse sur deux lignes.
+          const yTel =
+            yReponse + (r.hauteur - r.size) + Math.round(w * 0.055 * echelle);
+          const largeurTel = largeurTelephone(w, h - yTel);
 
           return (
             <>
@@ -974,7 +1008,7 @@ function SlideSvg({
               />
               <rect
                 x={marge}
-                y={yReponse - r.size - Math.round(w * 0.03)}
+                y={Math.round(yQuestion + (q.hauteur - q.size) + q.size * 0.34)}
                 width={Math.round(w * 0.16)}
                 height={8}
                 rx={4}
@@ -992,16 +1026,14 @@ function SlideSvg({
               />
               {avecTelephone && slide.exemple && (
                 <Telephone
-                  x={(w - Math.round(w * 0.54)) / 2}
-                  // `yReponse` est la ligne de base de la PREMIÈRE ligne : sans
-                  // ajouter la hauteur des suivantes, le téléphone recouvrait la
-                  // fin d'une réponse sur deux lignes.
-                  y={yReponse + (r.hauteur - r.size) + Math.round(w * 0.06)}
-                  largeur={Math.round(w * 0.54)}
+                  x={(w - largeurTel) / 2}
+                  y={yTel}
+                  largeur={largeurTel}
                   uid={uid}
+                  basVisible={h}
                 >
                   <EcranExercice
-                    largeur={Math.round(w * 0.54)}
+                    largeur={largeurTel}
                     exercise={slide.exemple}
                     font={font}
                   />
@@ -1049,14 +1081,17 @@ function SlideSvg({
               font,
               lineHeight: 1.3,
             });
-            const largeurTel = Math.round(w * 0.54);
             const yTitre = Math.round(h * 0.1) + titre.size;
             const ySous =
               yTitre +
               (titre.hauteur - titre.size) +
               Math.round(w * 0.035) +
               sous.size;
-            const yTel = ySous + Math.round(w * 0.06);
+            // La légende peut tenir sur deux lignes : le téléphone se pose sous
+            // la dernière, pas sous la première.
+            const yTel =
+              ySous + (sous.hauteur - sous.size) + Math.round(w * 0.06);
+            const largeurTel = largeurTelephone(w, h - yTel);
 
             return (
               <>
@@ -1096,6 +1131,7 @@ function SlideSvg({
                   y={yTel}
                   largeur={largeurTel}
                   uid={uid}
+                  basVisible={h}
                 >
                   <EcranExercice
                     largeur={largeurTel}

@@ -48,6 +48,7 @@ export function Telephone({
   y,
   largeur,
   uid,
+  basVisible,
   children,
 }: {
   x: number;
@@ -55,11 +56,23 @@ export function Telephone({
   largeur: number;
   /** Identifiant unique : plusieurs téléphones cohabitent sur une même page. */
   uid: string;
+  /**
+   * Ordonnée du bas de la slide, dans le même repère que `y`. Le fondu se
+   * termine là — sans cette information, l'appareil était coupé net par le bord.
+   */
+  basVisible?: number;
   children: React.ReactNode;
 }) {
   const hauteur = largeur * 2.05;
   const rayon = largeur * 0.115;
   const bord = largeur * 0.022;
+
+  // Le fondu s'arrête au bord de la slide, ou au bas de l'appareil s'il tient
+  // en entier. Le calage était auparavant fait à 72 % de la hauteur du
+  // téléphone : dès qu'il dépassait largement du cadre, ces 72 % tombaient
+  // hors champ et le bord de la slide tranchait l'écran en plein texte.
+  const finFondu = Math.min(hauteur + bord * 3, (basVisible ?? Infinity) - y);
+  const debutFondu = finFondu - largeur * 0.5;
 
   return (
     <g transform={`translate(${x} ${y})`}>
@@ -83,32 +96,41 @@ export function Telephone({
           fondu qui fait la différence entre une capture collée sur un fond et un
           objet posé dans la scène.
         */}
-        <linearGradient id={`fondu-${uid}`} x1="0" y1="0" x2="0" y2="1">
+        <linearGradient
+          id={`fondu-${uid}`}
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1={debutFondu}
+          x2="0"
+          y2={finFondu}
+        >
           <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="72%" stopColor="#ffffff" />
           <stop offset="100%" stopColor="#000000" />
         </linearGradient>
+        {/*
+          Le masque déborde largement sur les côtés : la lueur est plus large
+          que l'appareil, et un masque coupe tout ce qu'il ne couvre pas.
+        */}
         <mask id={`masque-${uid}`}>
           <rect
-            x={-bord * 3}
-            y={-bord * 3}
-            width={largeur + bord * 6}
-            height={hauteur + bord * 6}
+            x={-largeur * 1.5}
+            y={-hauteur}
+            width={largeur * 4}
+            height={hauteur * 3}
             fill={`url(#fondu-${uid})`}
           />
         </mask>
       </defs>
 
-      {/* Lueur derrière l'appareil : elle le détache du fond. */}
-      <ellipse
-        cx={largeur / 2}
-        cy={hauteur * 0.42}
-        rx={largeur * 1.05}
-        ry={hauteur * 0.42}
-        fill={`url(#halo-${uid})`}
-      />
-
       <g mask={`url(#masque-${uid})`}>
+        {/* Lueur derrière l'appareil : elle le détache du fond. */}
+        <ellipse
+          cx={largeur / 2}
+          cy={hauteur * 0.42}
+          rx={largeur * 1.05}
+          ry={hauteur * 0.42}
+          fill={`url(#halo-${uid})`}
+        />
         <rect
           x={-bord}
           y={-bord}
@@ -117,7 +139,14 @@ export function Telephone({
           rx={rayon + bord}
           fill={`url(#chassis-${uid})`}
         />
-        <rect x={0} y={0} width={largeur} height={hauteur} rx={rayon} fill="#0a0908" />
+        <rect
+          x={0}
+          y={0}
+          width={largeur}
+          height={hauteur}
+          rx={rayon}
+          fill="#0a0908"
+        />
 
         <g clipPath={`url(#ecran-${uid})`}>{children}</g>
 
@@ -172,11 +201,33 @@ export function EcranExercice({
       <BarreEtat u={u} couleur={c.texte} font={font} />
 
       {/* En-tête du produit */}
-      <rect x={9 * u} y={22 * u} width={7 * u} height={7 * u} rx={2 * u} fill={c.accent} />
-      <text x={19 * u} y={28 * u} fill={c.texte} fontFamily={font} fontSize={5.2 * u} fontWeight={800}>
+      <rect
+        x={9 * u}
+        y={22 * u}
+        width={7 * u}
+        height={7 * u}
+        rx={2 * u}
+        fill={c.accent}
+      />
+      <text
+        x={19 * u}
+        y={28 * u}
+        fill={c.texte}
+        fontFamily={font}
+        fontSize={5.2 * u}
+        fontWeight={800}
+      >
         ATLAS
       </text>
-      <rect x={72 * u} y={21.5 * u} width={19 * u} height={8 * u} rx={4 * u} fill={c.accent} opacity={0.16} />
+      <rect
+        x={72 * u}
+        y={21.5 * u}
+        width={19 * u}
+        height={8 * u}
+        rx={4 * u}
+        fill={c.accent}
+        opacity={0.16}
+      />
       <text
         x={81.5 * u}
         y={27 * u}
@@ -190,16 +241,45 @@ export function EcranExercice({
       </text>
 
       {/* Nom de l'exercice */}
-      <text x={9 * u} y={45 * u} fill={c.texte} fontFamily={font} fontSize={8.4 * u} fontWeight={800}>
+      <text
+        x={9 * u}
+        y={45 * u}
+        fill={c.texte}
+        fontFamily={font}
+        fontSize={8.4 * u}
+        fontWeight={800}
+      >
         {couper(exercise.name, 17)}
       </text>
-      <text x={9 * u} y={53 * u} fill={c.discret} fontFamily={font} fontSize={4 * u} fontWeight={600}>
+      <text
+        x={9 * u}
+        y={53 * u}
+        fill={c.discret}
+        fontFamily={font}
+        fontSize={4 * u}
+        fontWeight={600}
+      >
         {exercise.muscles.slice(0, 3).join(" · ")}
       </text>
 
       {/* Carte du mouvement */}
-      <rect x={9 * u} y={59 * u} width={82 * u} height={66 * u} rx={5 * u} fill={c.carte} />
-      <rect x={13 * u} y={63 * u} width={14 * u} height={7 * u} rx={3.5 * u} fill={c.fond} opacity={0.85} />
+      <rect
+        x={9 * u}
+        y={59 * u}
+        width={82 * u}
+        height={66 * u}
+        rx={5 * u}
+        fill={c.carte}
+      />
+      <rect
+        x={13 * u}
+        y={63 * u}
+        width={14 * u}
+        height={7 * u}
+        rx={3.5 * u}
+        fill={c.fond}
+        opacity={0.85}
+      />
       <text
         x={20 * u}
         y={68 * u}
@@ -211,7 +291,13 @@ export function EcranExercice({
       >
         2 / {exercise.steps.length}
       </text>
-      <svg x={22 * u} y={62 * u} width={56 * u} height={58 * u} viewBox="16 10 168 174">
+      <svg
+        x={22 * u}
+        y={62 * u}
+        width={56 * u}
+        height={58 * u}
+        viewBox="16 10 168 174"
+      >
         <FigureBody
           pose={keyPoseOf(exercise)}
           colors={{ stroke: c.trait, strokeDim: c.traitClair, prop: "#2c2825" }}
@@ -219,8 +305,22 @@ export function EcranExercice({
       </svg>
 
       {/* Sélecteur de mode, comme dans le produit */}
-      <rect x={30 * u} y={130 * u} width={40 * u} height={9 * u} rx={4.5 * u} fill={c.carte} />
-      <rect x={31 * u} y={131 * u} width={19 * u} height={7 * u} rx={3.5 * u} fill={c.accent} />
+      <rect
+        x={30 * u}
+        y={130 * u}
+        width={40 * u}
+        height={9 * u}
+        rx={4.5 * u}
+        fill={c.carte}
+      />
+      <rect
+        x={31 * u}
+        y={131 * u}
+        width={19 * u}
+        height={7 * u}
+        rx={3.5 * u}
+        fill={c.accent}
+      />
       <text
         x={40.5 * u}
         y={136 * u}
@@ -279,7 +379,14 @@ export function EcranExercice({
       ))}
 
       {/* Bouton d'action */}
-      <rect x={9 * u} y={193 * u} width={82 * u} height={13 * u} rx={6.5 * u} fill={c.action} />
+      <rect
+        x={9 * u}
+        y={193 * u}
+        width={82 * u}
+        height={13 * u}
+        rx={6.5 * u}
+        fill={c.action}
+      />
       <text
         x={50 * u}
         y={201.5 * u}
@@ -303,7 +410,15 @@ export function EcranExercice({
  * réseau croissantes, les trois arcs du wifi avec son point, et une batterie
  * avec son ergot. Trois rectangles approximatifs ne trompaient personne.
  */
-function BarreEtat({ u, couleur, font }: { u: number; couleur: string; font: string }) {
+function BarreEtat({
+  u,
+  couleur,
+  font,
+}: {
+  u: number;
+  couleur: string;
+  font: string;
+}) {
   /** Un arc de wifi : un demi-cercle ouvert vers le bas, centré sur le point. */
   const arc = (r: number) =>
     `M ${(84.6 - r * 0.7071) * u} ${(12.8 - r * 0.7071) * u} A ${r * u} ${r * u} 0 0 1 ${
@@ -339,7 +454,12 @@ function BarreEtat({ u, couleur, font }: { u: number; couleur: string; font: str
       </g>
 
       {/* Wifi : trois arcs et un point */}
-      <g stroke={couleur} strokeWidth={1.1 * u} fill="none" strokeLinecap="round">
+      <g
+        stroke={couleur}
+        strokeWidth={1.1 * u}
+        fill="none"
+        strokeLinecap="round"
+      >
         <path d={arc(4.6)} />
         <path d={arc(3)} />
       </g>
@@ -357,7 +477,14 @@ function BarreEtat({ u, couleur, font }: { u: number; couleur: string; font: str
         strokeWidth={0.6 * u}
         opacity={0.45}
       />
-      <rect x={90.8 * u} y={9.6 * u} width={4.6 * u} height={2.6 * u} rx={0.8 * u} fill={couleur} />
+      <rect
+        x={90.8 * u}
+        y={9.6 * u}
+        width={4.6 * u}
+        height={2.6 * u}
+        rx={0.8 * u}
+        fill={couleur}
+      />
       <path
         d={`M ${98.1 * u} ${10.2 * u} A ${0.8 * u} ${0.8 * u} 0 0 1 ${98.1 * u} ${11.6 * u}`}
         stroke={couleur}
