@@ -18,9 +18,9 @@ export const SITE = {
    * introuvable. Prenez le même pseudo sur les deux plateformes.
    * Ce pseudo alimente aussi les visuels générés dans /app/kit-pub.
    */
-  handle: "@atlas.training",
-  instagram: "https://instagram.com/atlas.training",
-  tiktok: "https://tiktok.com/@atlas.training",
+  handle: "@atlas.training.fr",
+  instagram: "https://instagram.com/atlas.training.fr",
+  tiktok: "https://tiktok.com/@atlas.training.fr",
 };
 
 /**
