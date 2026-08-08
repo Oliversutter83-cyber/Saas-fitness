@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { EcranExercice, Telephone } from "@/components/CarouselMockup";
 import { FigureBody } from "@/components/Figure";
 import { TRIAL_DAYS } from "@/config";
 import { CATEGORIES, keyPoseOf, type Category, type Exercise } from "@/content/exercises";
@@ -59,8 +60,18 @@ const THEMES = {
 
 type ThemeId = keyof typeof THEMES;
 
+const VISUELS = {
+  silhouette: "Silhouette seule",
+  telephone: "Dans un téléphone",
+} as const;
+
+type VisuelId = keyof typeof VISUELS;
+
+/** Côté le plus long d'une photo de fond importée, en pixels. */
+const FOND_MAX = 1400;
+
 type Slide =
-  | { kind: "hook"; kicker: string; question: string; reponse: string }
+  | { kind: "hook"; kicker: string; question: string; reponse: string; exemple?: Exercise }
   | { kind: "exercise"; index: number; total: number; exercise: Exercise; caption: string }
   | { kind: "cta"; title: string; subtitle: string };
 
@@ -150,6 +161,9 @@ export function CarouselStudio({
 }) {
   const [format, setFormat] = useState<FormatId>("carre");
   const [theme, setTheme] = useState<ThemeId>("sombre");
+  const [visuel, setVisuel] = useState<VisuelId>("telephone");
+  const [fond, setFond] = useState<string | null>(null);
+  const [fondErreur, setFondErreur] = useState<string | null>(null);
   const [category, setCategory] = useState<Category | "">("");
   const [kicker, setKicker] = useState<string>(ACCROCHES[0].kicker);
   const [question, setQuestion] = useState<string>(ACCROCHES[0].question);
@@ -175,7 +189,7 @@ export function CarouselStudio({
 
   const slides: Slide[] = useMemo(
     () => [
-      { kind: "hook", kicker, question, reponse },
+      { kind: "hook", kicker, question, reponse, exemple: selected[0] },
       ...selected.map((exercise, i) => ({
         kind: "exercise" as const,
         index: i + 1,
@@ -222,6 +236,12 @@ export function CarouselStudio({
             { value: "or", label: "Or" },
             { value: "clair", label: "Clair" },
           ]}
+        />
+        <Select
+          label="Style des visuels"
+          value={visuel}
+          onChange={(v) => setVisuel(v as VisuelId)}
+          options={Object.entries(VISUELS).map(([id, label]) => ({ value: id, label }))}
         />
         <Select
           label="Catégorie d'exercices"
@@ -295,6 +315,58 @@ export function CarouselStudio({
         </div>
       </div>
 
+      {/* Photo de fond */}
+      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+        <h2 className="font-extrabold text-white">Photo de fond (facultatif)</h2>
+        <p className="mt-1 text-sm leading-relaxed text-white/55">
+          Sans photo, les slides utilisent un dégradé noir et or. Avec une photo — un salon, un
+          tapis, un parc — elles prennent l&apos;allure d&apos;une vraie campagne. Un voile sombre
+          est posé par-dessus pour que le texte reste lisible.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-white/40">
+          N&apos;utilisez que des photos dont vous avez le droit : les vôtres, ou des banques
+          d&apos;images libres comme Unsplash ou Pexels. Une photo prise au hasard sur internet
+          expose à une réclamation du photographe.
+        </p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              const fichier = e.target.files?.[0];
+              setFondErreur(null);
+              if (!fichier) return;
+              try {
+                setFond(await reduireImage(fichier));
+              } catch {
+                setFond(null);
+                setFondErreur("Cette image n'a pas pu être lue. Essayez-en une autre.");
+              }
+            }}
+            className="block w-full max-w-xs text-sm text-white/60 file:mr-3 file:rounded-full file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:file:bg-white/15"
+          />
+          {fond && (
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={fond}
+                alt="Aperçu du fond"
+                className="h-16 w-16 rounded-xl object-cover ring-1 ring-white/15"
+              />
+              <button
+                type="button"
+                onClick={() => setFond(null)}
+                className="text-xs font-semibold text-white/60 underline"
+              >
+                Retirer
+              </button>
+            </div>
+          )}
+        </div>
+        {fondErreur && <p className="mt-3 text-sm text-red-300">{fondErreur}</p>}
+      </div>
+
       {/* Choix manuel des exercices */}
       <details className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
         <summary className="cursor-pointer font-bold text-white">
@@ -350,14 +422,16 @@ export function CarouselStudio({
         <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {monte &&
             slides.map((slide, i) => (
-            <SlideCard
-              key={i}
-              slide={slide}
-              position={i + 1}
-              format={format}
-              theme={theme}
-              siteName={siteName}
-              handle={handle}
+              <SlideCard
+                key={i}
+                slide={slide}
+                position={i + 1}
+                format={format}
+                theme={theme}
+                visuel={visuel}
+                fond={fond}
+                siteName={siteName}
+                handle={handle}
                 onMount={(node) => {
                   svgRefs.current[i] = node;
                 }}
@@ -394,6 +468,8 @@ function SlideCard({
   position,
   format,
   theme,
+  visuel,
+  fond,
   siteName,
   handle,
   onMount,
@@ -402,6 +478,8 @@ function SlideCard({
   position: number;
   format: FormatId;
   theme: ThemeId;
+  visuel: VisuelId;
+  fond: string | null;
   siteName: string;
   handle: string;
   onMount: (node: SVGSVGElement | null) => void;
@@ -423,6 +501,9 @@ function SlideCard({
         slide={slide}
         format={format}
         theme={theme}
+        visuel={visuel}
+        fond={fond}
+        uid={`s${position}`}
         siteName={siteName}
         handle={handle}
         className="w-full rounded-xl"
@@ -491,11 +572,78 @@ function DownloadAll({
 
 // ------------------------------------------------------------- rendu du SVG
 
+/**
+ * Le fond d'une slide.
+ *
+ * Sans photo, on dessine un dégradé et une lueur dorée : c'est sobre, c'est aux
+ * couleurs du site, et ça ne coûte aucun octet. Avec une photo importée, on la
+ * recadre en la remplissant et on la couvre d'un voile sombre — sans ce voile,
+ * un texte blanc devient illisible dès que la photo comporte un ciel clair.
+ *
+ * Les identifiants des dégradés portent un suffixe unique : plusieurs slides
+ * vivent dans la même page, et deux dégradés de même nom se marcheraient dessus.
+ */
+function Fond({
+  w,
+  h,
+  c,
+  image,
+  uid,
+}: {
+  w: number;
+  h: number;
+  c: (typeof THEMES)[ThemeId];
+  image: string | null;
+  uid: string;
+}) {
+  return (
+    <>
+      <defs>
+        <linearGradient id={`degrade-${uid}`} x1="0" y1="0" x2="0.3" y2="1">
+          <stop offset="0%" stopColor={c.bg} />
+          <stop offset="100%" stopColor={c.card} />
+        </linearGradient>
+        <radialGradient id={`lueur-${uid}`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor={c.accent} stopOpacity={0.22} />
+          <stop offset="100%" stopColor={c.accent} stopOpacity={0} />
+        </radialGradient>
+        <linearGradient id={`voile-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0a0908" stopOpacity={0.82} />
+          <stop offset="45%" stopColor="#0a0908" stopOpacity={0.55} />
+          <stop offset="100%" stopColor="#0a0908" stopOpacity={0.85} />
+        </linearGradient>
+      </defs>
+
+      {image ? (
+        <>
+          <image
+            href={image}
+            x={0}
+            y={0}
+            width={w}
+            height={h}
+            preserveAspectRatio="xMidYMid slice"
+          />
+          <rect width={w} height={h} fill={`url(#voile-${uid})`} />
+        </>
+      ) : (
+        <>
+          <rect width={w} height={h} fill={`url(#degrade-${uid})`} />
+          <ellipse cx={w * 0.5} cy={h * 0.58} rx={w * 0.75} ry={h * 0.4} fill={`url(#lueur-${uid})`} />
+        </>
+      )}
+    </>
+  );
+}
+
 function SlideSvg({
   ref,
   slide,
   format,
   theme,
+  visuel,
+  fond,
+  uid,
   siteName,
   handle,
   className,
@@ -504,6 +652,11 @@ function SlideSvg({
   slide: Slide;
   format: FormatId;
   theme: ThemeId;
+  visuel: VisuelId;
+  /** Photo de fond importée, en data URL, ou null pour le dégradé */
+  fond: string | null;
+  /** Rend uniques les dégradés et découpes : plusieurs slides cohabitent. */
+  uid: string;
   siteName: string;
   handle: string;
   className?: string;
@@ -524,7 +677,7 @@ function SlideSvg({
       className={className}
       style={{ display: "block", height: "auto", maxWidth: "100%" }}
     >
-      <rect width={w} height={h} fill={c.bg} />
+      <Fond w={w} h={h} c={c} image={fond} uid={uid} />
 
       {slide.kind === "hook" &&
         (() => {
@@ -560,10 +713,13 @@ function SlideSvg({
             lineHeight: 1.25,
           });
 
+          const avecTelephone = visuel === "telephone" && Boolean(slide.exemple);
           const ecartEtiquette = Math.round(w * 0.05);
           const ecartReponse = Math.round(w * 0.06);
           const total = etiquette.hauteur + ecartEtiquette + q.hauteur + ecartReponse + r.hauteur;
-          const hautDuBloc = h * 0.5 - total / 2;
+          // Avec le téléphone, le texte remonte pour lui laisser la place ;
+          // sans lui, il se centre dans la slide.
+          const hautDuBloc = avecTelephone ? h * 0.08 : h * 0.5 - total / 2;
 
           const yEtiquette = hautDuBloc + etiquette.size;
           const yQuestion = yEtiquette + ecartEtiquette + q.size;
@@ -607,105 +763,184 @@ function SlideSvg({
                 font={font}
                 weight={700}
               />
-              <text
-                x={marge}
-                y={h - 80}
-                fill={c.muted}
-                fontFamily={font}
-                fontSize={Math.round(w * 0.03)}
-                fontWeight={700}
-              >
-                {handle} · glisse →
-              </text>
+              {avecTelephone && slide.exemple && (
+                <Telephone
+                  x={(w - Math.round(w * 0.54)) / 2}
+                  // `yReponse` est la ligne de base de la PREMIÈRE ligne : sans
+                  // ajouter la hauteur des suivantes, le téléphone recouvrait la
+                  // fin d'une réponse sur deux lignes.
+                  y={yReponse + (r.hauteur - r.size) + Math.round(w * 0.06)}
+                  largeur={Math.round(w * 0.54)}
+                  uid={uid}
+                >
+                  <EcranExercice
+                    largeur={Math.round(w * 0.54)}
+                    exercise={slide.exemple}
+                    font={font}
+                  />
+                </Telephone>
+              )}
+              {!avecTelephone && (
+                <text
+                  x={marge}
+                  y={h - 80}
+                  fill={c.muted}
+                  fontFamily={font}
+                  fontSize={Math.round(w * 0.03)}
+                  fontWeight={700}
+                >
+                  {handle} · glisse →
+                </text>
+              )}
             </>
           );
         })()}
 
-      {slide.kind === "exercise" && (
-        <>
-          <text
-            x={80}
-            y={130}
-            fill={c.accent}
-            fontFamily={font}
-            fontSize={Math.round(w * 0.035)}
-            fontWeight={800}
-            letterSpacing={2}
-          >
-            {slide.index}/{slide.total}
-          </text>
-          <BlocTexte
-            bloc={ajuster(slide.exercise.name.toUpperCase(), {
-              largeurMax: w - 160,
+      {slide.kind === "exercise" &&
+        (visuel === "telephone" ? (
+          (() => {
+            // Le téléphone déborde volontairement par le bas : c'est ce cadrage
+            // qui donne l'impression d'un produit posé dans la scène plutôt que
+            // d'une capture d'écran collée au milieu.
+            const marge = 80;
+            const titre = ajuster(slide.exercise.name.toUpperCase(), {
+              largeurMax: w - marge * 2,
               lignesMax: 2,
-              sizeMax: Math.round(w * 0.075),
-              sizeMin: Math.round(w * 0.042),
+              sizeMax: Math.round(w * 0.085),
+              sizeMin: Math.round(w * 0.048),
               weight: 800,
               font,
               lineHeight: 1.06,
-            })}
-            x={80}
-            y={230}
-            lineHeight={1.06}
-            fill={c.text}
-            font={font}
-            weight={800}
-          />
-
-          <rect
-            x={80}
-            y={h * 0.34}
-            width={w - 160}
-            height={h * 0.34}
-            rx={40}
-            fill={c.card}
-          />
-          <svg
-            x={(w - h * 0.3) / 2}
-            y={h * 0.36}
-            width={h * 0.3}
-            height={h * 0.3}
-            viewBox="16 10 168 174"
-          >
-            <FigureBody
-              pose={keyPoseOf(slide.exercise)}
-              colors={{
-                stroke: theme === "sombre" ? "#eacb71" : "#0a0908",
-                strokeDim: theme === "sombre" ? "#4a443e" : "#a8a099",
-                prop: theme === "sombre" ? "#2c2825" : "#ece5d8",
-              }}
-            />
-          </svg>
-
-          <BlocTexte
-            bloc={ajuster(slide.caption, {
-              largeurMax: w - 160,
-              lignesMax: 3,
-              sizeMax: Math.round(w * 0.038),
+            });
+            const sous = ajuster(slide.caption, {
+              largeurMax: w - marge * 2,
+              lignesMax: 2,
+              sizeMax: Math.round(w * 0.036),
               sizeMin: Math.round(w * 0.026),
               weight: 600,
               font,
-              lineHeight: 1.35,
-            })}
-            x={80}
-            y={h * 0.78}
-            lineHeight={1.35}
-            fill={c.muted}
-            font={font}
-            weight={600}
-          />
-          <text
-            x={80}
-            y={h - 80}
-            fill={c.muted}
-            fontFamily={font}
-            fontSize={Math.round(w * 0.028)}
-            fontWeight={700}
-          >
-            {slide.exercise.muscles.join(" · ")}
-          </text>
-        </>
-      )}
+              lineHeight: 1.3,
+            });
+            const largeurTel = Math.round(w * 0.54);
+            const yTitre = Math.round(h * 0.1) + titre.size;
+            const ySous = yTitre + (titre.hauteur - titre.size) + Math.round(w * 0.035) + sous.size;
+            const yTel = ySous + Math.round(w * 0.06);
+
+            return (
+              <>
+                <text
+                  x={marge}
+                  y={Math.round(h * 0.1) - Math.round(w * 0.03)}
+                  fill={c.accent}
+                  fontFamily={font}
+                  fontSize={Math.round(w * 0.032)}
+                  fontWeight={800}
+                  letterSpacing={3}
+                >
+                  {slide.index}/{slide.total}
+                </text>
+                <BlocTexte
+                  bloc={titre}
+                  x={marge}
+                  y={yTitre}
+                  lineHeight={1.06}
+                  fill={c.text}
+                  font={font}
+                  weight={800}
+                />
+                <BlocTexte
+                  bloc={sous}
+                  x={marge}
+                  y={ySous}
+                  lineHeight={1.3}
+                  fill={c.accent}
+                  font={font}
+                  weight={600}
+                />
+                <Telephone x={(w - largeurTel) / 2} y={yTel} largeur={largeurTel} uid={uid}>
+                  <EcranExercice largeur={largeurTel} exercise={slide.exercise} font={font} />
+                </Telephone>
+              </>
+            );
+          })()
+        ) : (
+          <>
+            <text
+              x={80}
+              y={130}
+              fill={c.accent}
+              fontFamily={font}
+              fontSize={Math.round(w * 0.035)}
+              fontWeight={800}
+              letterSpacing={2}
+            >
+              {slide.index}/{slide.total}
+            </text>
+            <BlocTexte
+              bloc={ajuster(slide.exercise.name.toUpperCase(), {
+                largeurMax: w - 160,
+                lignesMax: 2,
+                sizeMax: Math.round(w * 0.075),
+                sizeMin: Math.round(w * 0.042),
+                weight: 800,
+                font,
+                lineHeight: 1.06,
+              })}
+              x={80}
+              y={230}
+              lineHeight={1.06}
+              fill={c.text}
+              font={font}
+              weight={800}
+            />
+
+            <rect x={80} y={h * 0.34} width={w - 160} height={h * 0.34} rx={40} fill={c.card} />
+            <svg
+              x={(w - h * 0.3) / 2}
+              y={h * 0.36}
+              width={h * 0.3}
+              height={h * 0.3}
+              viewBox="16 10 168 174"
+            >
+              <FigureBody
+                pose={keyPoseOf(slide.exercise)}
+                colors={{
+                  stroke: theme === "sombre" ? "#eacb71" : "#0a0908",
+                  strokeDim: theme === "sombre" ? "#4a443e" : "#a8a099",
+                  prop: theme === "sombre" ? "#2c2825" : "#ece5d8",
+                }}
+              />
+            </svg>
+
+            <BlocTexte
+              bloc={ajuster(slide.caption, {
+                largeurMax: w - 160,
+                lignesMax: 3,
+                sizeMax: Math.round(w * 0.038),
+                sizeMin: Math.round(w * 0.026),
+                weight: 600,
+                font,
+                lineHeight: 1.35,
+              })}
+              x={80}
+              y={h * 0.78}
+              lineHeight={1.35}
+              fill={c.muted}
+              font={font}
+              weight={600}
+            />
+            <text
+              x={80}
+              y={h - 80}
+              fill={c.muted}
+              fontFamily={font}
+              fontSize={Math.round(w * 0.028)}
+              fontWeight={700}
+            >
+              {slide.exercise.muscles.join(" · ")}
+            </text>
+          </>
+        ))}
 
       {slide.kind === "cta" &&
         (() => {
@@ -929,6 +1164,28 @@ function BlocTexte({
       ))}
     </text>
   );
+}
+
+/**
+ * Réduit et recompresse une photo importée avant de l'embarquer dans le SVG.
+ *
+ * Une photo de téléphone pèse plusieurs mégaoctets ; encodée en base64 dans
+ * chacune des sept slides, elle rendrait l'aperçu poussif et l'export très lent.
+ * 1400 px de côté suffisent largement pour un visuel de 1080 px.
+ */
+async function reduireImage(fichier: File): Promise<string> {
+  const bitmap = await createImageBitmap(fichier);
+  const facteur = Math.min(1, FOND_MAX / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * facteur);
+  canvas.height = Math.round(bitmap.height * facteur);
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponible");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  return canvas.toDataURL("image/jpeg", 0.82);
 }
 
 // -------------------------------------------------------------------- export
